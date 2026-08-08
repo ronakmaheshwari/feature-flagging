@@ -1,4 +1,5 @@
 import { Router } from "express";
+import userRouter from "./userRouter";
 
 interface RouterInterface {
     path: string;
@@ -8,7 +9,10 @@ interface RouterInterface {
 const router: Router = Router();
 
 const allRouters: RouterInterface[] = [
-
+    {
+        path: "/user",
+        router: userRouter
+    }
 ]
 
 allRouters.forEach((x) => {
