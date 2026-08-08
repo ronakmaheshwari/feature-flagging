@@ -12,14 +12,114 @@ datasource db {
   provider = "postgresql"
 }
 
+enum USER_STATUS {
+  ACTIVE
+  DELETED
+  UNVERIFIED
+  LOCKED
+}
+
+enum STATUS_TYPE {
+  DRAFT
+  POSTED
+  DELETED
+}
+
+enum ENVIRONMENT_TYPE {
+  PRODUCTION
+  DEVELOPMENT
+}
+
 model User {
-  id String @id @default(uuid())
-  username String 
-  email String @unique
-  password String
-  resetPasswordToken String?
+  id                     String               @id @default(uuid())
+  username               String
+  email                  String               @unique
+  password               String
+  user_status            USER_STATUS          @default(UNVERIFIED)
+  resetPasswordToken     String?
   resetPasswordOtpExpire DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt
+  jwt_token              JWT_Token?
+  content                Content[]
+  group                  Group[]
+  feature_flag_audit     Feature_Flag_Audit[] @relation("UpdatedBy")
+
   @@index([email])
+}
+
+model JWT_Token {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  token       String
+  tokenExpire DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+model Content {
+  id            String         @id @default(uuid())
+  userId        String
+  content       String
+  platform      String?
+  isDeleted     Boolean        @default(false)
+  status        STATUS_TYPE    @default(DRAFT)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  user          User           @relation(fields: [userId], references: [id])
+  content_audit ContentAudit[]
+
+  @@index([userId])
+}
+
+model ContentAudit {
+  id         String   @id @default(uuid())
+  contentId  String
+  old_value  Json
+  new_value  Json
+  changed_at DateTime @default(now())
+  content    Content  @relation(fields: [contentId], references: [id])
+
+  @@index([contentId])
+}
+
+model Group {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  total_users Int
+  userId      String
+  isDeleted   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@index([name, userId])
+}
+
+model Feature_Flag {
+  id                 String               @id @default(uuid())
+  name               String               @unique
+  is_enabled         Boolean              @default(false)
+  environment        ENVIRONMENT_TYPE     @default(DEVELOPMENT)
+  rules              Json                 @default("{}")
+  rollout            Int                  @default(100)
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  feature_flag_audit Feature_Flag_Audit[]
+
+  @@index([name])
+}
+
+model Feature_Flag_Audit {
+  id           String       @id @default(uuid())
+  flagId       String
+  old_value    Json
+  new_value    Json
+  updatedBy    String?
+  changed_at   DateTime     @default(now())
+  user         User?        @relation("UpdatedBy", fields: [updatedBy], references: [id])
+  feature_flag Feature_Flag @relation(fields: [flagId], references: [id])
+
+  @@index([flagId, updatedBy])
 }
