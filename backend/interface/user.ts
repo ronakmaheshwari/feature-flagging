@@ -2,7 +2,7 @@
 export interface SignupInterface {
     success: boolean,
     message: string,
-    token?: string
+    user?: string
 }
 
 export interface UserDataInterface {

@@ -1,9 +1,11 @@
 import type {Request, Response, NextFunction } from "express";
-import { userLoginValidation, userSignupValidation } from "../validation/userValidation";
+import { forgetPasswordOTPVerificationValidation, linkVerificationValidation, otpCodeVerificationValidation, otpVerificationValidation, userLoginValidation, userSignupValidation } from "../validation/userValidation";
 import userSignupService from "../services/user/signupService";
 import userLoginService from "../services/user/loginService";
-import db from "../utils/db/db";
 import userDataService from "../services/user/getUserDataService";
+import otpVerificationService from "../services/user/otpVerificationService";
+import userVerificationService from "../services/user/userVerifcationService";
+import forgetPasswordOTPService from "../services/user/forgetPasswordOTPService";
 
 export const userSignupController = async (
     req: Request,
@@ -99,5 +101,134 @@ export const userDetailsController = async (
             success: false,
             message: "Internal error took place"
         });
+    }
+}
+
+export const otpVerificationController = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const parsed = otpVerificationValidation.safeParse(req.params);
+        if(!parsed.success) {
+            return res.status(400).json({
+                success: false,
+                message: parsed.error.flatten()
+            });
+        }
+
+        const {email} = parsed.data
+        const {errorCode, success, message} = await otpVerificationService(email);
+
+        return res.status(errorCode).json({
+            success: success,
+            message: message
+        })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: `Internal error occured`
+        })
+    }
+}
+
+export const userVerificationController = async (
+    req: Request, 
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const parsed = otpCodeVerificationValidation.safeParse(req.query);
+        if(!parsed.success) {
+            return res.status(400).json({
+                success: false,
+                message: parsed.error.flatten()
+            })
+        }
+
+        const {email, otp} = parsed.data;
+
+        const {errorCode, success, message} = await userVerificationService(email, otp);
+
+        return res.status(errorCode).json({
+            success: success,
+            message: message
+        })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: `Internal error occured`
+        })
+    }
+}
+
+export const forgetPasswordOTPController = async (
+    req: Request, 
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const parsed = otpVerificationValidation.safeParse(req.params)
+        if(!parsed.success) {
+            return res.status(400).json({
+                success: false,
+                message: parsed.error.flatten()
+            }) 
+        }
+
+        const {email} = parsed.data;
+        const {errorCode, success, message} = await forgetPasswordOTPService(email);
+        return res.status(errorCode).json({
+            success: success,
+            message: message,
+        })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: `Internal error occured`
+        })
+    }
+}
+
+export const forgetPasswordController = async (
+    req: Request, 
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const parsed = linkVerificationValidation.safeParse(req.params);
+        if(!parsed.success) {
+            return res.status(400).json({
+                success: false,
+                message: parsed.error.flatten()
+            }) 
+        }
+
+        const {link} = parsed.data;
+        const otpParsed = forgetPasswordOTPVerificationValidation.safeParse(req.body);
+        if(!otpParsed.success) {
+            return res.status(400).json({
+                success: false,
+                message: otpParsed.error.flatten()
+            }) 
+        }
+
+        const {otp, newPassword} = otpParsed.data;
+
+        const {errorCode, success, message} = await forgetPasswordOTPService(email);
+        return res.status(errorCode).json({
+            success: success,
+            message: message,
+        })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: `Internal error occured`
+        })
     }
 }

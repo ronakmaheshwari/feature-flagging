@@ -1,7 +1,6 @@
 import type { Prisma } from "@prisma/client"
 import db from "../../utils/db/db"
 import { hashPassword } from "../../utils/passwordHash/passwordHash"
-import { jwtTokenGenerator } from "../../utils/jwtToken/token"
 import type { SignupInterface } from "../../interface/user"
 
 const userSignupService = async (username: string, email: string, password: string): Promise<string | SignupInterface> => {
@@ -28,31 +27,15 @@ const userSignupService = async (username: string, email: string, password: stri
                     username: username as string,
                     email: email as string,
                     password: hashedPassword,
-                    user_status: "ACTIVE"
-                }
-            });
-            const token = jwtTokenGenerator(user.id);
-            await tx.jWT_Token.upsert({
-                where: {
-                    userId: user.id as string
-                },
-                update: {
-                    token: token,
-                    tokenExpire: new Date(Date.now() + 60 * 60 * 24 * 1000)
-                },
-                create: {
-                    userId: user.id as string,
-                    token: token,
-                    tokenExpire: new Date(Date.now() + 60 * 60 * 24 * 1000)
+                    user_status: "UNVERIFIED"
                 }
             });
 
-            return token;
+            return user;
         })
         return {
             success: true,
             message: "User was successfully created",
-            token: addUser
         }
     } catch (error) {
         return error instanceof Error ? error.message : "An unexpected error occurred"

@@ -1,4 +1,4 @@
-import z from "zod";
+import z, { email } from "zod";
 
 export const userSignupValidation = z.object({
     username: z.string().trim().min(3, {
@@ -19,5 +19,29 @@ export const userLoginValidation = z.object({
     }).min(8, "Your password must have atleast 8 characters")
 })
 
+export const otpVerificationValidation = z.object({
+    email: z.email({ pattern: z.regexes.rfc5322Email , error: "Invalid email address format."}).trim(),
+})
+
+export const otpCodeVerificationValidation = z.object({
+    email: z.email({pattern: z.regexes.rfc5322Email, error: "Invalid email address format."}).trim(),
+    otp: z.string({error: "Invalid OTP format was provided"}).trim()
+})
+
+export const linkVerificationValidation = z.object({
+    link: z.string({error: "Invalid link datatype was provided"})
+})
+
+export const forgetPasswordOTPVerificationValidation = z.object({
+    otp: z.string({error: "Invalid otp datatype format was provided"}),
+    newPassword: z.string().trim().regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9])[A-Za-z\d^A-Za-z0-9]{8,}$/, {
+        error: "Your password must be strong"
+    }).min(8, "Your password must have atleast 8 characters")
+})
+
 export type userSignupValidationType = z.infer<typeof userSignupValidation>;
 export type userLoginValidationType = z.infer<typeof userLoginValidation>;
+export type otpVerificationType = z.infer<typeof otpVerificationValidation>;
+export type otpCodeVerificationType = z.infer<typeof otpCodeVerificationValidation>;
+export type linkVerificationValidationType = z.infer<typeof linkVerificationValidation>;
+export type forgetPasswordOTPVerificationValidationType = z.infer<typeof forgetPasswordOTPVerificationValidation>;
