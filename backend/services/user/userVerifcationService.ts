@@ -1,6 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import db from "../../utils/db/db";
 import { jwtTokenGenerator } from "../../utils/jwtToken/token";
+import { redisCache, CACHE_KEY } from "../../utils/cache/cache";
 
 const userVerificationService = async (
     email: string,
@@ -38,11 +39,29 @@ const userVerificationService = async (
                 };
             }
 
-            const userOtp = await tx.otp.findUnique({
-                where: {
-                    userId: user.id,
-                },
-            });
+            let userOtp:
+                | {
+                      id: string;
+                      createdAt: Date;
+                      updatedAt: Date;
+                      userId: string;
+                      otp: string;
+                      otpExpireTime: Date;
+                      isUsed: boolean;
+                      type: string;
+                  }
+                | null = null;
+
+            const otpCache =await redisCache.get(CACHE_KEY(user.email, user.id));
+            if(otpCache) {
+                userOtp = JSON.parse(otpCache)
+            } else {
+                userOtp = await tx.otp.findUnique({
+                    where: {
+                        userId: user.id,
+                    },
+                });
+            }
 
             if (!userOtp) {
                 return {

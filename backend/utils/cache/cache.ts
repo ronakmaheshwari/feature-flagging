@@ -1,12 +1,18 @@
 import { createClient } from "redis";
+import dotenv from "dotenv"
+
+dotenv.config()
 
 const redisCache = createClient({
     url: process.env.REDIS_URL || "redis://localhost:6379",
 });
 
-const TTL_TIME = 60;
+const FLAG_TTL_TIME = 60;
 const FLAG_KEY = (name: string, env: string) => `flag:${env}:${name}`;
 const ALL_FLAG_KEY = (env:string) => `flag:all:${env}`;
+export const OTP_EXPIRE_MINUTES = parseInt(process.env.OTP_EXPIRE_MINUTES as string) ?? 2
+export const CACHE_KEY = (email: string, id: string) => `OTP:${id}:${email}`
+export const TTL_TIME = 120
 
 redisCache.on("error",(e) => {
     console.log(`Redis client couldnt get connected: ${e}`);

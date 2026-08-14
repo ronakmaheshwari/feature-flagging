@@ -6,6 +6,7 @@ import userDataService from "../services/user/getUserDataService";
 import otpVerificationService from "../services/user/otpVerificationService";
 import userVerificationService from "../services/user/userVerifcationService";
 import forgetPasswordOTPService from "../services/user/forgetPasswordOTPService";
+import forgetPasswordService from "../services/user/forgetPasswordService";
 
 export const userSignupController = async (
     req: Request,
@@ -217,9 +218,9 @@ export const forgetPasswordController = async (
             }) 
         }
 
-        const {otp, newPassword} = otpParsed.data;
+        const {newPassword} = otpParsed.data;
 
-        const {errorCode, success, message} = await forgetPasswordOTPService(email);
+        const {errorCode, success, message} = await forgetPasswordService(link, newPassword);
         return res.status(errorCode).json({
             success: success,
             message: message,

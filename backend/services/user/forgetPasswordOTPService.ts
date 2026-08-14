@@ -1,3 +1,4 @@
+import { CACHE_KEY, redisCache, TTL_TIME } from "../../utils/cache/cache";
 import db from "../../utils/db/db"
 import sendEmailOtp from "../../utils/email/emailConfig";
 import { AlphabeticOtpGenerator } from "../../utils/email/otpGenerator";
@@ -38,6 +39,13 @@ const forgetPasswordOTPService = async (
             resetPasswordOtpExpire: expire_time
         }
     })
+
+    const otpCache = await redisCache.set(CACHE_KEY(findEmail.email, findEmail.id), JSON.stringify({
+        userId: findEmail.id,
+        email: findEmail.email,
+        resetPasswordToken: token,
+        resetPasswordOtpExpire: updateUser.resetPasswordOtpExpire
+    }),{expiration: {type: "EX", value: TTL_TIME}})
 
     await sendEmailOtp({email: findEmail.email, expire_time: expire_time.toString(), otp: updateUser.resetPasswordToken as string, reason: "forget-password"})
 

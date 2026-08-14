@@ -33,7 +33,6 @@ export const linkVerificationValidation = z.object({
 })
 
 export const forgetPasswordOTPVerificationValidation = z.object({
-    otp: z.string({error: "Invalid otp datatype format was provided"}),
     newPassword: z.string().trim().regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9])[A-Za-z\d^A-Za-z0-9]{8,}$/, {
         error: "Your password must be strong"
     }).min(8, "Your password must have atleast 8 characters")
