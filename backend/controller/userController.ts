@@ -151,11 +151,12 @@ export const userVerificationController = async (
 
         const {email, otp} = parsed.data;
 
-        const {errorCode, success, message} = await userVerificationService(email, otp);
+        const {errorCode, success, message, token} = await userVerificationService(email, otp);
 
         return res.status(errorCode).json({
             success: success,
-            message: message
+            message: message,
+            token
         })
     } catch (error) {
         console.log(error);

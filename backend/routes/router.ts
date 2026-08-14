@@ -1,5 +1,6 @@
 import { Router } from "express";
 import userRouter from "./userRouter";
+import contentRouter from "./contentRouter";
 
 interface RouterInterface {
     path: string;
@@ -12,6 +13,10 @@ const allRouters: RouterInterface[] = [
     {
         path: "/user",
         router: userRouter
+    }, 
+    {
+        path: "/content",
+        router: contentRouter
     }
 ]
 
