@@ -1,8 +1,7 @@
 import db from "../../utils/db/db"
 
-export const changeGroupNameService = async (
-    newName: string,
-    groupId: string,
+export const deleteGroupService = async (
+    groupId: string
 ) => {
     const findGroup = await db.group.findUnique({
         where: {
@@ -26,32 +25,18 @@ export const changeGroupNameService = async (
         }
     }
 
-    const findName = await db.group.findUnique({
+    const updateGroup = await db.group.update({
         where: {
-            name: newName
-        }
-    })
-
-    if(findName) {
-        return {
-            errorCode: 409,
-            success: false,
-            message: "The group name already exists"
-        }
-    }
-
-    const updateGroupName = await db.group.update({
-        where: {
-            id: groupId as string
+            id: groupId as string,
         },
         data: {
-            name: newName
+            isDeleted: true
         }
     })
 
     return {
         errorCode: 200,
         success: true,
-        message: "The group name was changed"
+        message: "The group was successfully deleted"
     }
 }

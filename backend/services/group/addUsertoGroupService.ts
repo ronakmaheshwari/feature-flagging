@@ -2,7 +2,6 @@ import type { Prisma } from "@prisma/client"
 import db from "../../utils/db/db"
 
 export const addUserGroupService = async (
-    userId: string,
     email: string,
     groupId: string
 ) => {
