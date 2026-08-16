@@ -3,7 +3,6 @@ import db from "../../utils/db/db"
 export const addNewGroupService = async (
     userId: string,
     name: string,
-    totalUser: number
 ) => {
     const findGroup = await db.group.findUnique({
         where: {
@@ -21,9 +20,9 @@ export const addNewGroupService = async (
 
     const addGroup = await db.group.create({
         data: {
-            total_users: totalUser,
             name: name,
-            userId: userId
+            userId: userId,
+            total_users: 0
         }
     })
 
