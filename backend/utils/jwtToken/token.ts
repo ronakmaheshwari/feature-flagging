@@ -1,3 +1,4 @@
+import type { ROLES } from "@prisma/client";
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken"
 import type { JwtPayload, SignOptions } from "jsonwebtoken"
@@ -11,13 +12,13 @@ if(!JWT_SECRET || !JWT_EXPIRE) {
     throw new Error("You must provide JWT_SECRET or JWT_EXPIRE")
 }
 
-const jwtTokenGenerator = (userId: string) => {
-    return jwt.sign({userId: userId}, JWT_SECRET ,{
+const jwtTokenGenerator = (userId: string, role: ROLES) => {
+    return jwt.sign({userId: userId, role: role}, JWT_SECRET ,{
         expiresIn: JWT_EXPIRE as SignOptions["expiresIn"]
     })
 }
 
-const jwtTokenVerifier = (token: string): string | Boolean => {
+const jwtTokenVerifier = (token: string): {userId: string; role: ROLES} | boolean => {
     let decoded: JwtPayload;
 
     try {
@@ -26,7 +27,7 @@ const jwtTokenVerifier = (token: string): string | Boolean => {
         return false
     }
 
-    return decoded.userId
+    return {userId: decoded.userId, role: decoded.role}
 }
 
 export {jwtTokenGenerator, jwtTokenVerifier}

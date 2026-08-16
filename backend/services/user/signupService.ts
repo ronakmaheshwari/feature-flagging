@@ -1,9 +1,9 @@
-import type { Prisma } from "@prisma/client"
+import type { Prisma, ROLES } from "@prisma/client"
 import db from "../../utils/db/db"
 import { hashPassword } from "../../utils/passwordHash/passwordHash"
 import type { SignupInterface } from "../../interface/user"
 
-const userSignupService = async (username: string, email: string, password: string): Promise<string | SignupInterface> => {
+const userSignupService = async (username: string, email: string, password: string, role: ROLES): Promise<string | SignupInterface> => {
     try {
         const checkEmail = await db.user.findUnique({
             where: {
@@ -27,7 +27,8 @@ const userSignupService = async (username: string, email: string, password: stri
                     username: username as string,
                     email: email as string,
                     password: hashedPassword,
-                    user_status: "UNVERIFIED"
+                    user_status: "UNVERIFIED",
+                    role: role
                 }
             });
 

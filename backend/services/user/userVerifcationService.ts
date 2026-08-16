@@ -121,7 +121,7 @@ const userVerificationService = async (
                 },
             });
 
-            const token = jwtTokenGenerator(user.id);
+            const token = jwtTokenGenerator(user.id, user.role);
 
             await tx.jWT_Token.upsert({
                 where: {

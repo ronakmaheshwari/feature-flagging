@@ -1,11 +1,12 @@
 import type {Request, Response, NextFunction } from "express";
 import { jwtTokenVerifier } from "../jwtToken/token";
-import db from "../db/db";
+import db, { ROLES } from "../db/db";
 
 declare global {
     namespace Express {
         interface Request {
-            userId?: string
+            userId?: string,
+            role?: ROLES
         }
     }
 }
@@ -22,7 +23,7 @@ const userMiddleware = async (req: Request, res: Response, next: NextFunction) =
         const token = authHeader.split(" ")[1] as string;
         const decoded = jwtTokenVerifier(token);
 
-        if(decoded === false) {
+        if (decoded === false || decoded === true || typeof decoded !== "object" || !decoded.userId || !decoded.role) {
             return res.status(401).json({
                 success: false,
                 message: "You are unauthorized to access these services"
@@ -31,7 +32,7 @@ const userMiddleware = async (req: Request, res: Response, next: NextFunction) =
 
         const checkUser = await db.user.findUnique({
             where: {
-                id: decoded as string
+                id: decoded.userId as string
             }
         })
 
@@ -47,7 +48,8 @@ const userMiddleware = async (req: Request, res: Response, next: NextFunction) =
             return res.status(401).json({ success: false, message: "Session expired, please log in again" });
         }
 
-        req.userId = decoded as string;
+        req.userId = decoded.userId;
+        req.role = decoded.role;
         next()
     } catch (error) {
         return res.status(500).json({

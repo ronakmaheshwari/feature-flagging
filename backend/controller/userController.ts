@@ -22,8 +22,8 @@ export const userSignupController = async (
             });
         }
 
-        const { username, email, password } = parsed.data;
-        const addUser = await userSignupService(username, email, password);
+        const { username, email, password, role } = parsed.data;
+        const addUser = await userSignupService(username, email, password, role);
 
         if (typeof addUser === "string") {       
             return res.status(500).json({ success: false, message: addUser });
