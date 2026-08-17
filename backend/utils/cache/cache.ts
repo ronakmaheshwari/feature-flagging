@@ -1,5 +1,6 @@
 import { createClient } from "redis";
 import dotenv from "dotenv"
+import type { ENVIRONMENT_TYPE } from "@prisma/client";
 
 dotenv.config()
 
@@ -28,12 +29,12 @@ const initRedis = async () => {
     }
 }
 
-const getCachedFlag = async (name: string, env: string) => {
+const getCachedFlag = async (name: string, env: ENVIRONMENT_TYPE) => {
     const raw = await redisCache.get(FLAG_KEY(name, env));
     return raw ? JSON.parse(raw) : null;
 }
 
-const setCachedFlag = async (name: string, env: string, flagData: any) => {
+const setCachedFlag = async (name: string, env: ENVIRONMENT_TYPE, flagData: any) => {
     await redisCache.setEx(
         FLAG_KEY(name, env),
         TTL_TIME,
@@ -41,7 +42,7 @@ const setCachedFlag = async (name: string, env: string, flagData: any) => {
     )
 }
 
-const invalidateCache = async (name: string, env: string) => {
+const invalidateCache = async (name: string, env: ENVIRONMENT_TYPE) => {
     await redisCache.del(FLAG_KEY(name, env));
     await redisCache.del(ALL_FLAG_KEY(env));
 }

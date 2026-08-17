@@ -1,4 +1,4 @@
-import { Prisma, PrismaClient, ROLES, USER_STATUS, STATUS_TYPE, ENVIRONMENT_TYPE, OTP_TYPE } from "@prisma/client";
+import { Prisma, PrismaClient, ROLES, USER_STATUS, STATUS_TYPE, ENVIRONMENT_TYPE, OTP_TYPE, type Feature_Flag, type Feature_Flag_Audit } from "@prisma/client";
 
 declare global {
     var prisma: PrismaClient | undefined
