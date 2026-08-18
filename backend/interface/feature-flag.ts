@@ -12,3 +12,10 @@ export type FeatureFlagRules = {
     whitelist?: listInterface[],
     groups?: string[],
 }
+
+export interface flagRuleInterface {
+    blacklist?: listInterface[],
+    whitelist?: listInterface[],
+    groups?: string[],
+    rollout?: number 
+}

@@ -145,6 +145,7 @@ model Feature_Flag {
   environment        ENVIRONMENT_TYPE     @default(DEVELOPMENT)
   rules              Json                 @default("{}")
   rollout            Int                  @default(100)
+  isDeleted          Boolean              @default(false)
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
   feature_flag_audit Feature_Flag_Audit[]
