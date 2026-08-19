@@ -7,7 +7,6 @@ export const getFlagAuditController = async (
     next: NextFunction
 ) => {
     try {
-        const userId = req.userId;
         const role = req.role;
         if(role !== "ADMIN") {
             return res.status(401).json({

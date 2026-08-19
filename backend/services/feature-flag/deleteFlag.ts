@@ -1,7 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import db from "../../utils/db/db"
 
-export const deleteFlag = async (
+export const deleteFlagService = async (
     userId: string,
     flagId: string
 ) => {
