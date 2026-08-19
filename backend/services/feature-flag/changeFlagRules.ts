@@ -1,11 +1,12 @@
 import type { Prisma } from "@prisma/client";
 import type { FeatureFlagRules, flagRuleInterface } from "../../interface/feature-flag";
 import db from "../../utils/db/db";
+import type { changeRulesValidationType } from "../../validation/featureFlagValidation";
 
-export const changeFlagRules = async (
+export const changeFlagRulesService = async (
     adminId: string,
     flagId: string,
-    data: flagRuleInterface
+    data: changeRulesValidationType
 ) => {
     const [findAdmin] = await Promise.all([
         db.user.findUnique({ where: { id: adminId } })

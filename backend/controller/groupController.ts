@@ -6,6 +6,7 @@ import { addUserGroupService } from "../services/group/addUsertoGroupService";
 import { changeGroupNameService } from "../services/group/changeGroupNameService";
 import { removeUserFromGroupService } from "../services/group/removeUserFromGroupService";
 import { deleteGroupService } from "../services/group/deleteGroupService";
+import type { ROLES } from "@prisma/client";
 
 export const getAllGroup = async (
     req: Request,
@@ -14,16 +15,9 @@ export const getAllGroup = async (
 ) => {
     try {
         const userId = req.userId;
-        const role = req.role;
+        const role = req.role as ROLES;
 
         if (!userId) {
-            return res.status(401).json({
-                success: false,
-                message: "You are unauthorized to access these services",
-            });
-        }
-
-        if (role !== "ADMIN") {
             return res.status(401).json({
                 success: false,
                 message: "You are unauthorized to access these services",
@@ -46,7 +40,7 @@ export const getAllGroup = async (
             });
         }
 
-        const groups = await getAllGroupService(parsedSearch.data, parsedFilter.data);
+        const groups = await getAllGroupService(userId, role, parsedSearch.data, parsedFilter.data);
 
         return res.status(200).json({
             success: true,

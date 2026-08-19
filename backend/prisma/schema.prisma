@@ -40,6 +40,17 @@ enum ROLES {
   ADMIN
 }
 
+enum Method {
+  GET
+  POST
+  PATCH
+  PUT
+  DELETE
+  OPTIONS
+  HEAD
+  
+}
+
 model User {
   id                     String               @id @default(uuid())
   username               String
@@ -149,8 +160,20 @@ model Feature_Flag {
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
   feature_flag_audit Feature_Flag_Audit[]
+  routes            RouteFlag[]
 
   @@index([name])
+}
+
+model RouteFlag {
+  id String @id @default(uuid())
+  method Method
+  path String
+  flagName String
+  feature_flag Feature_Flag @relation(fields: [flagName], references: [name])
+  createdAt DateTime @default(now())
+
+  @@unique([method, path])
 }
 
 model Feature_Flag_Audit {

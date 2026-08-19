@@ -1,12 +1,15 @@
-import { Prisma, PrismaClient, ROLES, USER_STATUS, STATUS_TYPE, ENVIRONMENT_TYPE, OTP_TYPE, type Feature_Flag, type Feature_Flag_Audit } from "@prisma/client";
+import { PrismaClient, ROLES, USER_STATUS, STATUS_TYPE, ENVIRONMENT_TYPE, OTP_TYPE, Method } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 
 declare global {
-    var prisma: PrismaClient | undefined
+    var prisma: PrismaClient | undefined;
 }
 
-const db = global.prisma ?? new PrismaClient()
-if(process.env.NODE_ENV !== "production") global.prisma = db
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 
-export {ROLES, USER_STATUS, STATUS_TYPE, ENVIRONMENT_TYPE, OTP_TYPE};
+const db = global.prisma ?? new PrismaClient({ adapter });
+if (process.env.NODE_ENV !== "production") global.prisma = db;
+
+export { ROLES, USER_STATUS, STATUS_TYPE, ENVIRONMENT_TYPE, OTP_TYPE, Method };
 
 export default db;

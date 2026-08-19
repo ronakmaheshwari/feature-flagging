@@ -2,13 +2,14 @@ import type { ENVIRONMENT_TYPE, Prisma } from "@prisma/client";
 import type { FeatureFlagRules } from "../../interface/feature-flag";
 import { getCachedFlag } from "../../utils/cache/cache";
 import db from "../../utils/db/db";
+import type { flagRulesValidationType } from "../../validation/featureFlagValidation";
 
-export const addNewFlag = async (
+export const addNewFlagService = async (
     userId: string,
     name: string,
     is_enabled: boolean,
     environment: ENVIRONMENT_TYPE,
-    rules: FeatureFlagRules,
+    rules: flagRulesValidationType,
     rollout: number
 ) => {
     const cachedFlag = await getCachedFlag(name, environment);

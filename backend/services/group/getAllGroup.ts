@@ -1,4 +1,4 @@
-import db from "../../utils/db/db";
+import db, { ROLES } from "../../utils/db/db";
 import type { groupFilterValidationType, groupSearchValidationType } from "../../validation/groupValidation";
 
 export const whereSearchClause = (description: string) => {
@@ -31,12 +31,20 @@ export const filterClause = (totalUser?: number, name?: string) => {
 };
 
 export const getAllGroupService = async (
+    userId: string,
+    role: ROLES,
     searchParams?: groupSearchValidationType,
-    filterParams?: groupFilterValidationType
+    filterParams?: groupFilterValidationType,
 ) => {
     const whereClause = searchParams?.description ? whereSearchClause(searchParams.description) : filterClause(filterParams?.totalUser, filterParams?.name);
+
+    let where = {
+        ...whereClause,
+        ...(role === ROLES.ADMIN ? {} : {userId: userId})
+    }
+
     const allGroups = await db.group.findMany({
-        where: whereClause,
+        where,
         select: {
             name: true,
             total_users: true,

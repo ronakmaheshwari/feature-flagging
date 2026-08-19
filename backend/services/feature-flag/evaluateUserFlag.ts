@@ -53,8 +53,8 @@ export const evaluateUserFlag = async (
 
     const userGroup = membership.map((x) => x.group.name)
 
-    const evaludateUser = evaluateFlag(
-        {userId: findUser.id, group: userGroup},
+    const evaludateUser = await evaluateFlag(
+        userId,
         findFlag
     )
     
