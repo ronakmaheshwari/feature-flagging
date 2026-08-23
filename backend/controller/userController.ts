@@ -118,7 +118,6 @@ export const otpVerificationController = async (
                 message: parsed.error.flatten()
             });
         }
-
         const {email} = parsed.data
         const {errorCode, success, message} = await otpVerificationService(email);
 

@@ -22,7 +22,6 @@ const otpVerificationService = async (
 
     const otp = AlphaNumbericOtpGenerator(6);
     const expire_time = new Date(Date.now() + OTP_EXPIRE_MINUTES * 60 * 1000)
-
     const storeOtp = await db.otp.upsert({
         where: {
             userId: findEmail.id as string
@@ -48,8 +47,7 @@ const otpVerificationService = async (
         createdAt: storeOtp.createdAt
     }),{expiration: {type: "EX", value: TTL_TIME}})
 
-    await sendEmailOtp({email: findEmail.email, otp: storeOtp.otp as string, expire_time: storeOtp.otpExpireTime.toString()});
-
+    await sendEmailOtp({email: findEmail.email, otp: storeOtp.otp as string, expire_time: storeOtp.otpExpireTime.toString()});    
     return {
         errorCode: 200,
         success: true,

@@ -5,9 +5,10 @@ import cors from "cors"
 import { success } from "zod";
 import featureFlagMiddleware from "./utils/middleware/featureFlagMiddleware";
 import router from "./routes/router";
+import { initRedis } from "./utils/cache/cache";
 dotenv.config();
 
-const app: Express = express();
+export const app: Express = express();
 const port = process.env.PORT || 3000;
 
 app.use(cors());
@@ -29,6 +30,19 @@ app.get("/health", async(req: Request, res: Response) => {
 
 app.use("/api/v1", router);
 
-app.listen(port , () => {
-    console.log(`Server running on http:localhost:${port}`);
-})
+const startServer = async () => {
+    try {
+        await initRedis();
+
+        app.listen(3000, () => {
+            console.log("Server running on http://localhost:3000");
+        });
+    } catch (error) {
+        console.error("Failed to start application:", error);
+        process.exit(1);
+    }
+};
+
+startServer();
+
+export default app;
