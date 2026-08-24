@@ -17,9 +17,10 @@ export const userSignupValidation = z.object({
 
 export const userLoginValidation = z.object({
     email: z.email({ pattern: z.regexes.rfc5322Email , error: "Invalid email address format." }),
-    password: z.string().trim().regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9])[A-Za-z\d^A-Za-z0-9]{8,}$/, {
+    password: z.string().trim().regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/,
+    {
         error: "Your password must be strong"
-    }).min(8, "Your password must have atleast 8 characters")
+    }).min(8, "Your password must have atleast 8 characters"),
 })
 
 export const otpVerificationValidation = z.object({
