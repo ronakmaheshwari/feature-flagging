@@ -10,6 +10,11 @@ if (!fromAddress) {
     throw new Error("You must provide EMAIL_FROM as a full sender address")
 }
 
+const appLink = process.env.FRONTEND_URL //"GateKeep <no-reply@gatekeep.com>"
+if (!appLink) {
+    throw new Error("You must provide FRONTEND_URL to send forget emails")
+}
+
 type ReasonType = "forget-password" | "signup"
 
 interface OtpInterface {
@@ -38,10 +43,11 @@ const getTransporter = () => {
 }
 
 const sendEmailOtp = async (data: OtpInterface): Promise<void> => {
-    const isForgetPassword = data.reason === "forget-password"
+    const isForgetPassword = data.reason === "forget-password";
+    const otpLink = `${appLink}/${data.otp.toString()}`;
 
     const html = isForgetPassword
-        ? forgetPasswordEmailTemplate("GateKeep", data.email, data.expire_time.toString(), data.otp.toString())
+        ? forgetPasswordEmailTemplate("GateKeep", data.email, data.expire_time.toString(), otpLink)
         : otpEmailTemplate("GateKeep", data.email, data.expire_time.toString(), data.otp.toString())
 
     const subject = isForgetPassword ? "Reset Your Password – OTP Code" : "Your OTP Code has arrived"

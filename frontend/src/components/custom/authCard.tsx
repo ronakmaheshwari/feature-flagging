@@ -146,7 +146,7 @@ const AuthCard = ({
         if (res.data.success === true) {
           const otpVerification = await api.patch(`/user/${email}`);
           if (otpVerification.data.success === true) {
-            navigate("/otp-verification");
+            navigate(`/otp?email=${email}`);
           } else {
             toast(otpVerification.data.message || otpVerification.data.error || "OTP Couldnt be dispatched");
           }
@@ -216,7 +216,7 @@ const AuthCard = ({
             </div>
           </div>
 
-          <div className="w-full my-auto py-2">
+          <div className="w-full">
             <div className="mb-2.5">
               <div className="flex items-center justify-between mb-1.5">
                 <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-neutral-900/90 border border-neutral-800 text-xs text-neutral-300 backdrop-blur-sm">

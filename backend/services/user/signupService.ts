@@ -11,7 +11,7 @@ const userSignupService = async (username: string, email: string, password: stri
             }
         })
 
-        if(checkEmail) {
+        if(checkEmail && (checkEmail.user_status !== "ACTIVE" && checkEmail.user_status !== "DELETED" && checkEmail.user_status !== "LOCKED" )) {
             return {
                 success: false,
                 message: `The given ${email} already exist with our system`
