@@ -5,8 +5,6 @@ import {
   ShieldCheck,
   KeyRound,
   Zap,
-  Lock,
-  Unlock,
   Mail,
   ArrowRight,
   RotateCcw,

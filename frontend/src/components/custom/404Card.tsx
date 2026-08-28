@@ -38,7 +38,7 @@ const QUICK_ROUTES = [
 ];
 
 const NotFound = () => {
-  const location = useNavigate ? useLocation() : ({ pathname: "" } as any);
+  const location = useLocation();
   const navigate = useNavigate();
 
   const [rolloutPct, setRolloutPct] = useState(0);
