@@ -7,6 +7,7 @@ import otpVerificationService from "../services/user/otpVerificationService";
 import userVerificationService from "../services/user/userVerifcationService";
 import forgetPasswordOTPService from "../services/user/forgetPasswordOTPService";
 import forgetPasswordService from "../services/user/forgetPasswordService";
+import logoutUserService from "../services/user/logoutUser";
 
 export const userSignupController = async (
     req: Request,
@@ -231,5 +232,33 @@ export const forgetPasswordController = async (
             success: false,
             message: `Internal error occured`
         })
+    }
+}
+
+export const logoutUser = async (
+    req: Request, 
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const userId = req.userId;
+        if(!userId) {
+            return res.status(401).json({
+                success: false,
+                message: "You are unauthorized to access these services"
+            })
+        }
+
+        const {errorCode, success, message} = await logoutUserService(userId);
+        
+        return res.status(errorCode).json({
+            success,
+            message
+        })
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Internal error took place"
+        });
     }
 }

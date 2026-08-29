@@ -105,7 +105,7 @@ const featureFlagService = {
   },
 
   getNames: async (all: boolean = false): Promise<PaginatedResponse<{ id: string; name: string }>> => {
-    const response = await api.get("/feature-flags/names", { params: { all: all.toString() } });
+    const response = await api.get("/feature-flags/", { params: { all: all.toString() } });
     return response.data;
   },
 

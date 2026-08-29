@@ -73,28 +73,23 @@ const OtpCard = ({
   const activeDigitsCount = otpDigits.filter(Boolean).length;
 
   const handleDigitChange = (index: number, value: string) => {
-    const numericVal = value.replace(/\D/g, "");
-    if (!numericVal && value !== "") return;
-
-    const newDigits = [...otpDigits];
-
-    if (numericVal.length > 1) {
-      const pasted = numericVal.slice(0, 6).split("");
-      pasted.forEach((char, i) => {
-        if (index + i < 6) {
-          newDigits[index + i] = char;
-        }
+    if (value.length > 1) {
+      // paste-like multi-character input
+      const chars = value.slice(0, 6).split("");
+      const newDigits = [...otpDigits];
+      chars.forEach((char, i) => {
+        if (index + i < 6) newDigits[index + i] = char;
       });
       setOtpDigits(newDigits);
-      const nextIndex = Math.min(index + pasted.length, 5);
-      inputRefs.current[nextIndex]?.focus();
+      inputRefs.current[Math.min(index + chars.length, 5)]?.focus();
       return;
     }
 
-    newDigits[index] = numericVal;
+    const newDigits = [...otpDigits];
+    newDigits[index] = value;
     setOtpDigits(newDigits);
 
-    if (numericVal && index < 5) {
+    if (value && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
   };
@@ -140,11 +135,7 @@ const OtpCard = ({
   const handleResend = () => {
     if (cooldown > 0 && !cooldownBypassFlag) return;
 
-    if (onResend) {
-      onResend(rawEmail);
-    } else {
-      toast.success(`New 6-digit authentication token dispatched to ${rawEmail}`);
-    }
+    resendMutation.mutate();
 
     if (!cooldownBypassFlag) {
       setCooldown(60);
@@ -176,12 +167,7 @@ const OtpCard = ({
       return;
     }
 
-    if (onVerify) {
-      //onVerify(fullOtp, rawEmail);
-      mutation.mutate()
-    } else {
-      toast.success(`Token [${fullOtp}] submitted for verification`);
-    }
+    mutation.mutate();
   };
 
   const handleBiometricAuth = () => {
@@ -257,7 +243,7 @@ const OtpCard = ({
       if(data.success === true) {
         localStorage.setItem("token", data.token);
         setToken(data.token);
-        navigate("/home");
+        navigate("/dashboard");
       }
     },
     onError: (data: any) => {
@@ -265,6 +251,26 @@ const OtpCard = ({
       toast(typeof err === "string" ? err : JSON.stringify(err));
     }
   });
+
+  const resendMutation = useMutation({
+    mutationKey: ["resend-otp"],
+    mutationFn: async () => {
+      if(rawEmail === "ronak@flagops.dev") {
+        return {
+          data: "You are trying to resend email on ronak@flagops.dev"
+        }
+      }
+      const otpVerification = await api.patch(`/user/${rawEmail}`);
+      return otpVerification.data
+    },
+    onSuccess: (data) => {
+      toast.success(`New 6-digit authentication token dispatched to ${rawEmail}`);
+    },
+    onError: (data: any) => {
+      const err = data?.response?.data?.message || data?.message || "An unexpected error took place";
+      toast(typeof err === "string" ? err : JSON.stringify(err));
+    }
+  })
 
   return (
     <div className="h-screen w-full flex bg-neutral-950 text-neutral-100 selection:bg-emerald-500/30 selection:text-emerald-200 overflow-hidden">

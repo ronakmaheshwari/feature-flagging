@@ -36,11 +36,11 @@ const allRouters: RouterInterface[] = [
         router: groupRouter
     },
     {
-        path: "/feature",
+        path: "/feature-flags",
         router: featureFlagRouter
     },
     {
-        path: "/feature/audit",
+        path: "/feature-flag/audit",
         router: featureFlagAuditRouter
     },
 ]

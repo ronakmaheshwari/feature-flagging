@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
-  Flag,
   Home,
   ArrowLeft,
   Search,
@@ -13,7 +12,8 @@ import {
   Compass,
   MapPinOff,
   Terminal,
-  ChevronRight
+  ChevronRight,
+  BadgeIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -32,7 +32,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
 const QUICK_ROUTES = [
-  { label: "Home", path: "/home", icon: Home },
+  { label: "Home", path: "/dashboard", icon: Home },
   { label: "Sign In", path: "/signin", icon: ArrowLeft },
   { label: "Create Workspace", path: "/signup", icon: Sparkles }
 ];
@@ -86,7 +86,7 @@ const NotFound = () => {
       return;
     }
     toast.error(`No route matches "${searchQuery}" — redirecting home`);
-    setTimeout(() => navigate("/home"), 900);
+    setTimeout(() => navigate("/dashboard"), 900);
   };
 
   const requestedPath = location?.pathname || "/unknown-route";
@@ -103,7 +103,7 @@ const NotFound = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="flex items-center justify-center size-9 rounded-xl bg-linear-to-br from-emerald-400 to-teal-600 text-neutral-950 font-bold shadow-lg shadow-emerald-500/20">
-                  <Flag className="size-4.5 fill-neutral-950 stroke-neutral-950" />
+                  <BadgeIcon className="size-4.5 fill-neutral-950 stroke-neutral-950" />
                 </div>
                 <div>
                   <CardTitle className="text-white text-base font-bold tracking-tight">
@@ -278,7 +278,7 @@ const NotFound = () => {
                 size="sm"
                 className="bg-linear-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-neutral-950 font-semibold text-xs h-8 cursor-pointer"
               >
-                <Link to="/home">
+                <Link to="/dashboard">
                   <Compass className="size-3.5 mr-1.5" />
                   Take Me Home
                 </Link>

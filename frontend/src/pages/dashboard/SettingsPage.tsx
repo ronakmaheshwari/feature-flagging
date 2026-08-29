@@ -63,7 +63,7 @@ export function SettingsPage() {
               <form onSubmit={handleSaveGeneral} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">Application Name</label>
-                  <Input defaultValue="FlagShip" disabled />
+                  <Input defaultValue="FlagOps" disabled />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">Default Environment</label>

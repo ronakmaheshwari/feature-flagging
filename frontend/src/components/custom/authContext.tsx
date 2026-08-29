@@ -48,9 +48,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const response = await api.get("/user/me", {
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      console.log("The data:", response.data)
       
-if (response.data.success && response.data.data) {
-          const userData = response.data.data;
+      if (response.status === 200 && response.data) {
+          const userData = response.data;
           setUser(userData);
           const isAdmin = userData.groups?.some((g: { name: string }) => g.name === "ADMIN");
           setRole(isAdmin ? "ADMIN" : "USER");
@@ -83,11 +85,15 @@ if (response.data.success && response.data.data) {
     }
   }, [token, fetchUser]);
 
-  const logout = () => {
+  const logout = async () => {
     localStorage.removeItem("token");
     setToken(null);
     setUser(null);
     setRole(null);
+    await api.patch("/user/logout", {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    )
     delete api.defaults.headers.common["Authorization"];
   };
 

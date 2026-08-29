@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import {
-  Flag,
   ShieldCheck,
   Zap,
   Mail,
@@ -17,7 +16,8 @@ import {
   XCircle,
   Radar,
   GitCommit,
-  Send
+  Send,
+  BadgeIcon
 } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -103,7 +103,7 @@ const ForgetPassword = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="flex items-center justify-center size-9 rounded-xl bg-linear-to-br from-emerald-400 to-teal-600 text-neutral-950 font-bold shadow-lg shadow-emerald-500/20">
-                  <Flag className="size-4.5 fill-neutral-950 stroke-neutral-950" />
+                  <BadgeIcon className="size-4.5 fill-neutral-950 stroke-neutral-950" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
@@ -361,7 +361,7 @@ const ForgetPassword = () => {
         <div className="flex lg:hidden items-center justify-between pb-3 mb-2 border-b border-neutral-800">
           <div className="flex items-center gap-2.5">
             <div className="flex items-center justify-center size-8 rounded-lg bg-linear-to-br from-emerald-400 to-teal-600 text-neutral-950 font-bold shadow-md">
-              <Flag className="size-4 fill-neutral-950 stroke-neutral-950" />
+              <BadgeIcon className="size-4.5 fill-neutral-950 stroke-neutral-950" />
             </div>
             <span className="text-lg font-bold tracking-tight text-white">FlagOps</span>
           </div>

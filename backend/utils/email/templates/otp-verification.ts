@@ -18,7 +18,7 @@ const otpEmailTemplate = (app_name: string, email: string, expiry_minutes: strin
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td style="font-size:18px; font-weight:700; color:#ffffff; letter-spacing:0.3px;">
-                    Sentrik
+                    ${app_name}
                   </td>
                 </tr>
               </table>

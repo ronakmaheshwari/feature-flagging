@@ -47,8 +47,8 @@ const sendEmailOtp = async (data: OtpInterface): Promise<void> => {
     const otpLink = `${appLink}/${data.otp.toString()}`;
 
     const html = isForgetPassword
-        ? forgetPasswordEmailTemplate("GateKeep", data.email, data.expire_time.toString(), otpLink)
-        : otpEmailTemplate("GateKeep", data.email, data.expire_time.toString(), data.otp.toString())
+        ? forgetPasswordEmailTemplate("FlagOps", data.email, data.expire_time.toString(), otpLink)
+        : otpEmailTemplate("FlagOps", data.email, data.expire_time.toString(), data.otp.toString())
 
     const subject = isForgetPassword ? "Reset Your Password – OTP Code" : "Your OTP Code has arrived"
 

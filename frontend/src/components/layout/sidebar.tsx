@@ -35,6 +35,7 @@ const navigation = [
 
 export function Sidebar() {
   const { user, role, logout } = useAuth();
+  console.log(`THe user: ${user}`)
   const location = useLocation();
   const [collapsed, setCollapsed] = React.useState(false);
 
@@ -54,7 +55,7 @@ export function Sidebar() {
         {!collapsed && (
           <NavLink to="/dashboard" className="flex items-center gap-2">
             <BadgeIcon className="size-5 text-primary" />
-            <span className="font-mono font-bold text-lg">FlagShip</span>
+            <span className="font-mono font-bold text-lg">FlagOps</span>
           </NavLink>
         )}
         <Button

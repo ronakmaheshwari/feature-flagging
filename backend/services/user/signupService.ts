@@ -22,8 +22,18 @@ const userSignupService = async (username: string, email: string, password: stri
         
 
         const addUser = await db.$transaction(async (tx: Prisma.TransactionClient) => {
-            const user = await tx.user.create({
-                data: {
+            const user = await tx.user.upsert({
+                where: {
+                    email: email as string
+                },
+                update: {
+                    username: username as string,
+                    email: email as string,
+                    password: hashedPassword,
+                    user_status: "UNVERIFIED",
+                    role: role
+                },
+                create: {
                     username: username as string,
                     email: email as string,
                     password: hashedPassword,

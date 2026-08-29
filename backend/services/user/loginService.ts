@@ -35,7 +35,7 @@ const userLoginService = async (email: string, password: string) => {
             }
         }
 
-        const token = jwtTokenGenerator(checkEmail.id);
+        const token = jwtTokenGenerator(checkEmail.id, checkEmail.role);
         await db.jWT_Token.upsert({
             where: {
                 userId: checkEmail.id as string
