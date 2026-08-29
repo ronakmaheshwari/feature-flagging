@@ -6,12 +6,28 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard } from "@/components/ui/stat-card";
 import { Progress, ProgressTrack, ProgressIndicator } from "@/components/ui/progress";
 import { Flag, Users, GitBranch } from "lucide-react";
+import { useAuth } from "@/components/custom/authContext";
+import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
 export function AnalyticsPage() {
+  const { token } = useAuth();
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!token) {
+      toast.error("Please login to access dashboard");
+      navigate("/signin");
+    }
+  }, [token]);
+  
   const { data: flagsData } = useQuery({
     queryKey: ["flags", "all"],
     queryFn: () => featureFlagService.getAll(),
     staleTime: 60000,
+    enabled: !!token,
   });
 
   const { data: groupsData } = useQuery({
@@ -21,9 +37,10 @@ export function AnalyticsPage() {
   });
 
   const { data: contentData } = useQuery({
-    queryKey: ["content"],
+    queryKey: ["content", token],
     queryFn: () => contentService.getAll(),
     staleTime: 60000,
+    enabled: !!token,
   });
 
   const { data: routesData } = useQuery({

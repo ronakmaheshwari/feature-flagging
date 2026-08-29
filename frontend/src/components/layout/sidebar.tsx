@@ -35,7 +35,6 @@ const navigation = [
 
 export function Sidebar() {
   const { user, role, logout } = useAuth();
-  console.log(`THe user: ${user}`)
   const location = useLocation();
   const [collapsed, setCollapsed] = React.useState(false);
 

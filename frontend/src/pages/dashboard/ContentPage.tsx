@@ -2,14 +2,15 @@
 
 import * as React from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { contentService } from "@/lib/api-services";
+import { contentAuditService, contentService } from "@/lib/api-services";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input"
+import { Input } from "@/components/ui/input";
 import { Modal, ConfirmModal } from "@/components/ui/modal";
-import { Plus, Search, RefreshCw, Edit, Trash2, Send } from "lucide-react";
-import { DataTable, type Column } from "@/components/ui/data-table";
+import { Plus, Search, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
+import { ContentCard } from "@/components/custom/content-card";
+import { ContentDetailModal } from "@/components/custom/content-detail-modal";
+import AuditHistory from "@/components/custom/auditHistory";
 
 const platforms = ["LinkedIn", "X", "Instagram", "Threads", "Facebook", "Blog"] as const;
 const statuses = ["DRAFT", "POSTED", "DELETED"] as const;
@@ -24,56 +25,36 @@ export function ContentPage() {
   const [selectedContent, setSelectedContent] = React.useState<any>(null);
   const [deleteConfirm, setDeleteConfirm] = React.useState<string | null>(null);
 
+  // Detail view
+  const [showDetailModal, setShowDetailModal] = React.useState(false);
+  const [viewContentId, setViewContentId] = React.useState<string | null>(null);
+
+  // Audit view
+  const [showAuditModal, setShowAuditModal] = React.useState(false);
+  const [auditContentId, setAuditContentId] = React.useState<string | null>(null);
+
   const { data: contentData, isLoading, refetch } = useQuery({
     queryKey: ["content", search, statusFilter, platformFilter],
-    queryFn: () => contentService.getAll({ content: search, status: statusFilter || undefined, platform: platformFilter || undefined }),
+    queryFn: () =>
+      contentService.getAll({
+        content: search,
+        status: statusFilter || undefined,
+        platform: platformFilter || undefined,
+      }),
     staleTime: 30000,
   });
 
   const content = contentData?.data || [];
+  const viewContent = content.find((c: any) => c.id === viewContentId) || null;
 
-  const columns: Column<any>[] = [
-    { key: "topic", header: "Topic", sortable: true },
-    {
-      key: "platform",
-      header: "Platform",
-      render: (v) => <Badge variant="secondary">{v as string}</Badge>,
-      sortable: true,
-      filterable: true,
-    },
-    {
-      key: "status",
-      header: "Status",
-      render: (v) => {
-        const status = v as string;
-        if (status === "POSTED") return <Badge variant="default">{status}</Badge>;
-        if (status === "DRAFT") return <Badge variant="secondary">{status}</Badge>;
-        return <Badge variant="destructive">{status}</Badge>;
-      },
-      sortable: true,
-      filterable: true,
-    },
-    { key: "createdAt", header: "Created", sortable: true, render: (v) => new Date(v as string).toLocaleDateString() },
-    {
-      key: "actions",
-      header: "Actions",
-      render: (_, row) => (
-        <div className="flex items-center justify-end gap-1">
-          {row.status === "DRAFT" && (
-            <Button variant="ghost" size="icon" onClick={() => {}} className="h-7 w-7" aria-label="Post">
-              <Send className="size-3.5" />
-            </Button>
-          )}
-          <Button variant="ghost" size="icon" onClick={() => { setSelectedContent(row); setShowEditModal(true); }} className="h-7 w-7" aria-label="Edit">
-            <Edit className="size-3.5" />
-          </Button>
-          <Button variant="ghost" size="icon" onClick={() => setDeleteConfirm(row.id)} className="h-7 w-7 text-destructive" aria-label="Delete">
-            <Trash2 className="size-3.5" />
-          </Button>
-        </div>
-      ),
-    },
-  ];
+  // Only fetch audit history once a specific content item is selected
+  const { data: auditData, isLoading: isAuditLoading } = useQuery({
+    queryKey: ["content-audit", auditContentId],
+    queryFn: () => contentAuditService.getAudit(auditContentId as string),
+    enabled: !!auditContentId && showAuditModal,
+  });
+
+  const auditLogs = auditData?.data || [];
 
   const createMutation = useMutation({
     mutationFn: (data: any) => contentService.create(data),
@@ -85,6 +66,9 @@ export function ContentPage() {
     onError: (error: any) => toast.error(error.response?.data?.message || "Failed to create content"),
   });
 
+  // NOTE: this still calls contentService.create, same as before — contentService has
+  // no update endpoint yet. This will create a duplicate row instead of editing in place.
+  // Flagging this; not fixing it here since it needs a new backend route + service method.
   const updateMutation = useMutation({
     mutationFn: (data: any) => contentService.create(data),
     onSuccess: () => {
@@ -154,12 +138,42 @@ export function ContentPage() {
         </Button>
       </div>
 
-      <DataTable
-        data={content}
-        columns={columns}
-        keyExtractor={(row) => row.id}
-        loading={isLoading}
-        emptyMessage="No content found. Create your first post!"
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {content.map((item: any) => (
+          <ContentCard
+            key={item.id}
+            content={item}
+            onView={(id) => { setViewContentId(id); setShowDetailModal(true); }}
+            onEdit={() => { setSelectedContent(item); setShowEditModal(true); }}
+            onAudit={(id) => { setAuditContentId(id); setShowAuditModal(true); }}
+            onDelete={(id) => setDeleteConfirm(id)}
+          />
+        ))}
+      </div>
+
+      {isLoading && (
+        <p className="text-center text-sm text-muted-foreground py-8">Loading content…</p>
+      )}
+      {!isLoading && content.length === 0 && (
+        <p className="text-center text-sm text-muted-foreground py-8">
+          No content found. Create your first post!
+        </p>
+      )}
+
+      <ContentDetailModal
+        open={showDetailModal}
+        onOpenChange={setShowDetailModal}
+        content={viewContent}
+        onEdit={(id) => {
+          setShowDetailModal(false);
+          setSelectedContent(viewContent);
+          setShowEditModal(true);
+        }}
+        onAudit={(id) => {
+          setShowDetailModal(false);
+          setAuditContentId(id);
+          setShowAuditModal(true);
+        }}
       />
 
       <Modal open={showCreateModal} onOpenChange={setShowCreateModal} title="Create Content" size="lg">
@@ -174,6 +188,16 @@ export function ContentPage() {
             onCancel={() => setShowEditModal(false)}
             loading={updateMutation.isPending}
           />
+        )}
+      </Modal>
+
+      <Modal open={showAuditModal} onOpenChange={setShowAuditModal} title="Audit History" size="lg">
+        {isAuditLoading ? (
+          <p className="text-sm text-muted-foreground text-center py-6">Loading audit history…</p>
+        ) : auditLogs.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-6">No audit entries found.</p>
+        ) : (
+          <AuditHistory auditLogs={auditLogs} />
         )}
       </Modal>
 

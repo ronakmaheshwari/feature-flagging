@@ -19,13 +19,14 @@ export const getAllFlagsController = async (
 ) => {
     try {
         const role = req.role;
-        if(role !== "ADMIN") {
+        const userId = req.userId
+        if(!role || !userId) {
             return res.status(401).json({
                 success: false,
-                message: "Only admin can access these services"
+                message: "You are unauthorized to access these services"
             })
         }
-        const {errorCode, success, message, data} = await getFlagService();
+        const {errorCode, success, message, data} = await getFlagService(role, userId);
         return res.status(errorCode).json({
             success: success,
             message: message,

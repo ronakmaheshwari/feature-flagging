@@ -48,8 +48,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const response = await api.get("/user/me", {
         headers: { Authorization: `Bearer ${token}` },
       });
-
-      console.log("The data:", response.data)
       
       if (response.status === 200 && response.data) {
           const userData = response.data;
@@ -77,10 +75,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     if (token) {
-      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       fetchUser();
     } else {
-      delete api.defaults.headers.common["Authorization"];
       setIsLoading(false);
     }
   }, [token, fetchUser]);

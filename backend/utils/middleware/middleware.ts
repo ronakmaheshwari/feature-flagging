@@ -13,6 +13,7 @@ declare global {
 
 const userMiddleware = async (req: Request, res: Response, next: NextFunction) => {
     try {
+        if (req.method === "OPTIONS") return next();
         const authHeader = req.headers.authorization;
         if(!authHeader || !authHeader.startsWith("Bearer ")) {
             return res.status(401).json({

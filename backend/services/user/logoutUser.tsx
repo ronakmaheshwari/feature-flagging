@@ -21,7 +21,7 @@ const logoutUserService = async (userId: string) => {
         },
         data: {
             token: "",
-            tokenExpire: ""
+            tokenExpire: new Date(0)
         }
     });
 

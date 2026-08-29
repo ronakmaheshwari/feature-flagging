@@ -4,6 +4,7 @@ import { evaluateFlag } from "../feature-flag-helper/flagHelper";
 
 const featureFlagMiddleware = async (req: Request, res: Response, next: NextFunction) => {
     try {
+        if (req.method === "OPTIONS") return next();
         await loadRouteMap();
         const matched = resolveRoute(req.method, req.path);
         if(!matched) {

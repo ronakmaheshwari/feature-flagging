@@ -224,7 +224,9 @@ const contentService = {
     status?: string;
     isDeleted?: boolean;
   }): Promise<PaginatedResponse<Content>> => {
-    const response = await api.get("/content", { params });
+    const response = await api.get("/content", {
+      params,
+    });
     return response.data;
   },
 
@@ -234,7 +236,7 @@ const contentService = {
     platform: "LinkedIn" | "X" | "Instagram" | "Threads" | "Facebook" | "Blog";
     status: "DRAFT" | "POSTED" | "DELETED";
   }): Promise<ApiResponse<Content>> => {
-    const response = await api.post("/content", data);
+    const response = await api.post("/content/submit", data);
     return response.data;
   },
 
@@ -243,6 +245,13 @@ const contentService = {
     return response.data;
   },
 };
+
+const contentAuditService = {
+  getAudit: async (contentId: string) => {
+    const response = await api.get(`/content/audit/${contentId}`);
+    return response.data
+  }
+}
 
 const routeFlagService = {
   getAll: async (): Promise<PaginatedResponse<RouteFlag>> => {
@@ -273,4 +282,4 @@ const userService = {
   },
 };
 
-export { featureFlagService, groupService, contentService, routeFlagService, userService };
+export { featureFlagService, groupService, contentService, contentAuditService, routeFlagService, userService };

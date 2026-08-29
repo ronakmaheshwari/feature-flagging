@@ -42,12 +42,12 @@ const userLoginService = async (email: string, password: string) => {
             },
             update: {
                 token: token,
-                tokenExpire: new Date(Date.now() * 60 * 60 * 24 * 1000)
+                tokenExpire: new Date(Date.now() + 60 * 60 * 24 * 1000)
             },
             create: {
                 userId: checkEmail.id as string,
                 token: token,
-                tokenExpire: new Date(Date.now() * 60 * 60 * 24 * 1000)
+                tokenExpire: new Date(Date.now() + 60 * 60 * 24 * 1000)
             }
         })
 

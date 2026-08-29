@@ -33,6 +33,7 @@ export function Modal({
   children,
   footer,
   size = "md",
+  className,
 }: ModalProps) {
   if (!open) return null;
 
@@ -50,15 +51,16 @@ export function Modal({
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm animate-in fade-in-0" onClick={() => onOpenChange(false)} />
       <div
         className={cn(
-          "relative w-full border border-border bg-background p-6 shadow-lg animate-in fade-in-0 zoom-in-95 slide-in-from-top-4",
-          sizeClasses[size]
+          "relative w-full border border-border bg-background p-6 shadow-lg animate-in fade-in-0 zoom-in-95 slide-in-from-top-4 flex flex-col max-h-[90vh] overflow-hidden rounded-lg",
+          sizeClasses[size],
+          className
         )}
       >
-        <div className="flex flex-col gap-4">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex-1">
-              <h2 className="text-lg font-semibold">{title}</h2>
-              {description && <p className="text-sm text-muted-foreground mt-0.5">{description}</p>}
+        <div className="flex flex-col gap-4 flex-1 min-h-0 overflow-hidden">
+          <div className="flex items-start justify-between gap-4 shrink-0">
+            <div className="flex-1 min-w-0">
+              <h2 className="text-lg font-semibold break-words [overflow-wrap:anywhere]">{title}</h2>
+              {description && <p className="text-sm text-muted-foreground mt-0.5 break-words [overflow-wrap:anywhere]">{description}</p>}
             </div>
             <Button
               variant="ghost"
@@ -70,9 +72,9 @@ export function Modal({
               <X className="size-4" />
             </Button>
           </div>
-          <div className="mt-2">{children}</div>
+          <div className="flex-1 min-h-0 overflow-hidden flex flex-col min-w-0 mt-2">{children}</div>
           {footer && (
-            <div className="flex justify-end gap-2 pt-4 border-t border-border mt-4">
+            <div className="flex justify-end gap-2 pt-4 border-t border-border mt-4 shrink-0">
               {footer}
             </div>
           )}

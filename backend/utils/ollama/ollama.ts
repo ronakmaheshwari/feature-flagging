@@ -1,11 +1,11 @@
-import ollama from 'ollama'
+import { Ollama } from 'ollama'
 import dotenv from "dotenv"
 
 dotenv.config()
 
-const OLLAMA_API_URL = process.env.OLLAMA_API_URL || "https://ollama.com/api/generate";
+const OLLAMA_API_URL = process.env.OLLAMA_API_URL || "https://ollama.com";
 const OLLAMA_API_KEY = process.env.OLLAMA_API_KEY;
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "your-model";
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "gemma4:31b";
 
 if(!OLLAMA_API_KEY) {
     throw new Error(`Please provide OLLAMA API KEY`)
@@ -40,6 +40,13 @@ const generateWithOllama = async (
   }
 
   const { system, think = "low", temperature = 0.7, ...rest } = options;
+
+  const ollama = new Ollama({
+    host: OLLAMA_API_URL,
+    headers: {
+      Authorization: `Bearer ${OLLAMA_API_KEY}`,
+    },
+  });
 
   const response = await ollama.generate({
     model: OLLAMA_MODEL,
