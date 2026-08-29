@@ -223,6 +223,8 @@ const contentService = {
     platform?: string;
     status?: string;
     isDeleted?: boolean;
+    page: number,
+    limit: number
   }): Promise<PaginatedResponse<Content>> => {
     const response = await api.get("/content", {
       params,
@@ -238,6 +240,16 @@ const contentService = {
   }): Promise<ApiResponse<Content>> => {
     const response = await api.post("/content/submit", data);
     return response.data;
+  },
+
+  update: async (contentId: string, data: {
+    topic: string;
+    content: string;
+    platform: "LinkedIn" | "X" | "Instagram" | "Threads" | "Facebook" | "Blog";
+    status: "DRAFT" | "POSTED" | "DELETED";
+  }): Promise<ApiResponse<Content>>  => {
+    const response = await api.put(`/content/edit/${contentId}`, data);
+    return response.data
   },
 
   delete: async (contentId: string): Promise<ApiResponse<void>> => {

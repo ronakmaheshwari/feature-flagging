@@ -3,6 +3,7 @@ import { deleteContentValidation, getContentQueryValidation, postContentValidati
 import { getAllContentService } from "../services/content/getAllContentService";
 import { postContentService } from "../services/content/postContentService";
 import { deleteContentService } from "../services/content/deleteContentService";
+import { editContentService } from "../services/content/editContentService";
 
 export const getAllContentController = async (
     req: Request,
@@ -18,7 +19,6 @@ export const getAllContentController = async (
             })
         }
 
-        let query = {};
         const parsedQuery = getContentQueryValidation.safeParse(req.query);
         if (!parsedQuery.success) {
             return res.status(400).json({
@@ -27,21 +27,35 @@ export const getAllContentController = async (
             });
         }
 
-        const { content, platform, status, isDeleted } = parsedQuery.data;
+        const { content, platform, status, isDeleted, skip, limit, page } = parsedQuery.data;
 
-        query = {
-            content, 
-            platform, 
-            status, 
-            isDeleted
-        }
+        const query: {
+            content?: string;
+            platform?: string;
+            status?: "DRAFT" | "POSTED" | "DELETED";
+            isDeleted?: boolean;
+            skip?: number;
+            limit?: string;
+            page?: string;
+        } = {
+            content,
+            platform,
+            status,
+            isDeleted,
+            skip,
+            limit,
+            page
+        };
+        console.log(typeof limit);
+        console.log(typeof page);
         
-        const {errorCode, success, message, data} = await getAllContentService(userId, query);
+        const {errorCode, success, message, data, pagination} = await getAllContentService(userId, query);
 
         return res.status(errorCode).json({
             success,
             message,
-            data
+            data,
+            pagination
         })
     } catch (error) {
         console.error(error);
@@ -78,6 +92,57 @@ export const addContentControlller = async (
         const {topic, content, platform, status} = parsed.data;
 
         const {success, errorCode, message, data} = await postContentService(userId, {topic, content, platform, status });
+
+        return res.status(errorCode).json({
+            success,
+            message,
+            data
+        })
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal error occured"
+        })
+    }
+}
+
+export const editContentControlller = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const userId = req.userId;
+        if(!userId) {
+            return res.status(401).json({
+                success: false,
+                message: "You are unauthorized to access these services"
+            })
+        }
+        
+        const parsedId = deleteContentValidation.safeParse(req.params);
+        if(!parsedId.success) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid data format was provided",
+                error: parsedId.error.flatten()
+            })
+        }
+
+        const parsed = postContentValidation.safeParse(req.body);
+        if(!parsed.success) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid data format was provided",
+                error: parsed.error.flatten()
+            })
+        }
+        
+        const {contentId} = parsedId.data;
+        const {topic, content, platform, status} = parsed.data;
+
+        const {success, errorCode, message, data} = await editContentService(userId, contentId ,{topic, content, platform, status });
 
         return res.status(errorCode).json({
             success,

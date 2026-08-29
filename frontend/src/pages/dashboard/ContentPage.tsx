@@ -1,5 +1,3 @@
-"use client";
-
 import * as React from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { contentAuditService, contentService } from "@/lib/api-services";
@@ -15,6 +13,8 @@ import AuditHistory from "@/components/custom/auditHistory";
 const platforms = ["LinkedIn", "X", "Instagram", "Threads", "Facebook", "Blog"] as const;
 const statuses = ["DRAFT", "POSTED", "DELETED"] as const;
 
+const PAGE_LIMIT = 10;
+
 export function ContentPage() {
   const queryClient = useQueryClient();
   const [search, setSearch] = React.useState("");
@@ -24,30 +24,33 @@ export function ContentPage() {
   const [showEditModal, setShowEditModal] = React.useState(false);
   const [selectedContent, setSelectedContent] = React.useState<any>(null);
   const [deleteConfirm, setDeleteConfirm] = React.useState<string | null>(null);
-
-  // Detail view
   const [showDetailModal, setShowDetailModal] = React.useState(false);
   const [viewContentId, setViewContentId] = React.useState<string | null>(null);
 
-  // Audit view
   const [showAuditModal, setShowAuditModal] = React.useState(false);
   const [auditContentId, setAuditContentId] = React.useState<string | null>(null);
 
+  const [page, setPage] = React.useState<number>(1);
+
   const { data: contentData, isLoading, refetch } = useQuery({
-    queryKey: ["content", search, statusFilter, platformFilter],
+    queryKey: ["content", search, statusFilter, platformFilter, page],
     queryFn: () =>
       contentService.getAll({
         content: search,
         status: statusFilter || undefined,
         platform: platformFilter || undefined,
+        page,
+        limit: PAGE_LIMIT,
       }),
     staleTime: 30000,
   });
 
   const content = contentData?.data || [];
+  const totalItems = contentData?.pagination?.total ?? 0;
+  const totalPages = contentData?.pagination?.totalPages ?? Math.max(1, Math.ceil(totalItems / PAGE_LIMIT));
+
   const viewContent = content.find((c: any) => c.id === viewContentId) || null;
 
-  // Only fetch audit history once a specific content item is selected
   const { data: auditData, isLoading: isAuditLoading } = useQuery({
     queryKey: ["content-audit", auditContentId],
     queryFn: () => contentAuditService.getAudit(auditContentId as string),
@@ -66,11 +69,8 @@ export function ContentPage() {
     onError: (error: any) => toast.error(error.response?.data?.message || "Failed to create content"),
   });
 
-  // NOTE: this still calls contentService.create, same as before — contentService has
-  // no update endpoint yet. This will create a duplicate row instead of editing in place.
-  // Flagging this; not fixing it here since it needs a new backend route + service method.
   const updateMutation = useMutation({
-    mutationFn: (data: any) => contentService.create(data),
+    mutationFn: ({id, data}:{id: any, data: any}) => contentService.update(id,data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["content"] });
       setShowEditModal(false);
@@ -88,6 +88,10 @@ export function ContentPage() {
     },
     onError: (error: any) => toast.error(error.response?.data?.message || "Failed to delete content"),
   });
+
+  React.useEffect(() => {
+    setPage(1);
+  }, [search, statusFilter, platformFilter]);
 
   return (
     <div className="space-y-6">
@@ -138,16 +142,17 @@ export function ContentPage() {
         </Button>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="flex flex-wrap gap-4">
         {content.map((item: any) => (
-          <ContentCard
-            key={item.id}
-            content={item}
-            onView={(id) => { setViewContentId(id); setShowDetailModal(true); }}
-            onEdit={() => { setSelectedContent(item); setShowEditModal(true); }}
-            onAudit={(id) => { setAuditContentId(id); setShowAuditModal(true); }}
-            onDelete={(id) => setDeleteConfirm(id)}
-          />
+          <div key={item.id} className="basis-full sm:basis-[calc(50%-0.5rem)] lg:basis-[calc(33.333%-0.667rem)] grow-0 shrink-0">
+            <ContentCard
+              content={item}
+              onView={(id) => { setViewContentId(id); setShowDetailModal(true); }}
+              onEdit={() => { setSelectedContent(item); setShowEditModal(true); }}
+              onAudit={(id) => { setAuditContentId(id); setShowAuditModal(true); }}
+              onDelete={(id) => setDeleteConfirm(id)}
+            />
+          </div>
         ))}
       </div>
 
@@ -184,7 +189,12 @@ export function ContentPage() {
         {selectedContent && (
           <ContentForm
             defaultValues={selectedContent}
-            onSubmit={updateMutation.mutate}
+            onSubmit={(data) =>
+              updateMutation.mutate({
+                id: selectedContent.id,
+                data,
+              })
+            }
             onCancel={() => setShowEditModal(false)}
             loading={updateMutation.isPending}
           />
@@ -210,6 +220,30 @@ export function ContentPage() {
         onConfirm={() => { if (deleteConfirm) deleteMutation.mutate(deleteConfirm); }}
         loading={deleteMutation.isPending}
       />
+
+      {!isLoading && content.length > 0 && (
+        <div className="flex items-center justify-center gap-3 pt-4">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page <= 1}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+          >
+            Previous
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            Page {page} of {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page >= totalPages}
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+          >
+            Next
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

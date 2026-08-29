@@ -4,7 +4,10 @@ export const getContentQueryValidation = z.object({
     content: z.string().optional(),
     platform: z.string().optional(),
     status: z.enum(["DRAFT", "POSTED", "DELETED"]).optional(),
-    isDeleted: z.boolean().optional()
+    isDeleted: z.boolean().optional(),
+    skip: z.number().optional(),
+    limit: z.string().optional(),
+    page: z.string().optional()
 })
 
 export const postContentValidation = z.object({

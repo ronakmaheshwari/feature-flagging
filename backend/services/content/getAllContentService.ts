@@ -3,7 +3,8 @@ import type { getContentQueryValidationType } from "../../validation/contentVali
 
 const searchWhereClause = (userId: string, query: getContentQueryValidationType) => {
     const whereClause: Record<string, any> = {
-        userId: userId
+        userId: userId,
+        isDeleted: false
     }
 
     if(query.content) {
@@ -36,13 +37,27 @@ export const getAllContentService = async (
     query: getContentQueryValidationType
 ) => {
     const whereClause = searchWhereClause(userId, query);
+    const page = parseInt(query.page as string) ?? 1;
+    const limit = parseInt(query.limit as string) ?? 10;
 
-    const findContent = await db.content.findMany({
-        where: whereClause,
-        orderBy: {
-            createdAt: "desc"
-        }
-    })
+    const skip = (page - 1) * limit;
+
+    const [findContent, totalCount] = await Promise.all([
+        db.content.findMany({
+            where: whereClause,
+            orderBy: {
+                createdAt: "desc"
+            },
+            skip: skip,
+            take: limit
+        }),
+        db.content.count({
+            where: whereClause,
+            orderBy: {
+                createdAt: "desc"
+            },
+        })
+    ])
 
     if(findContent.length <= 0) {
         return {
@@ -57,6 +72,12 @@ export const getAllContentService = async (
         errorCode: 200,
         success: true,
         message: "Please create some content to see data",
-        data: findContent
+        data: findContent,
+        pagination: {
+            currentPage: page,
+            pageSize: limit,
+            totalPages: Math.ceil(totalCount / limit),
+            totalItems: totalCount
+        }
     }
 }
