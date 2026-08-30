@@ -4,6 +4,7 @@ import { getAllContentService } from "../services/content/getAllContentService";
 import { postContentService } from "../services/content/postContentService";
 import { deleteContentService } from "../services/content/deleteContentService";
 import { editContentService } from "../services/content/editContentService";
+import { getContentCountService } from "../services/content/getContentCountService";
 
 export const getAllContentController = async (
     req: Request,
@@ -46,8 +47,6 @@ export const getAllContentController = async (
             limit,
             page
         };
-        console.log(typeof limit);
-        console.log(typeof page);
         
         const {errorCode, success, message, data, pagination} = await getAllContentService(userId, query);
 
@@ -56,6 +55,36 @@ export const getAllContentController = async (
             message,
             data,
             pagination
+        })
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal error occured"
+        })
+    }
+}
+
+export const getContentCount = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const userId = req.userId;
+        if(!userId) {
+            return res.status(401).json({
+                success: false,
+                message: "You are unauthorized to access these services"
+            })
+        }
+        
+        const {errorCode, success, message, data} = await getContentCountService(userId);
+
+        return res.status(errorCode).json({
+            success: success,
+            message: message,
+            data
         })
     } catch (error) {
         console.error(error);

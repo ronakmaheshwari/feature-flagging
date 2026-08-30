@@ -37,8 +37,8 @@ export function AnalyticsPage() {
   });
 
   const { data: contentData } = useQuery({
-    queryKey: ["content", token],
-    queryFn: () => contentService.getAll(),
+    queryKey: ["count", token],
+    queryFn: () => contentService.count(),
     staleTime: 60000,
     enabled: !!token,
   });
@@ -58,14 +58,11 @@ export function AnalyticsPage() {
   const disabledFlags = flags.length - enabledFlags;
   const devFlags = flags.filter((f: any) => f.environment === "DEVELOPMENT").length;
   const prodFlags = flags.filter((f: any) => f.environment === "PRODUCTION").length;
-  const draftContent = content.filter((c: any) => c.status === "DRAFT").length;
-  const postedContent = content.filter((c: any) => c.status === "POSTED").length;
-  const deletedContent = content.filter((c: any) => c.status === "DELETED").length;
+  const draftContent = content.draft;
+  const postedContent = content.published;
+  const deletedContent = content.deleted;
 
-  const platformCounts = content.reduce((acc: Record<string, number>, c: any) => {
-    acc[c.platform] = (acc[c.platform] || 0) + 1;
-    return acc;
-  }, {});
+  const platformCounts = content.platformCount || {};
 
   return (
     <div className="space-y-6">
@@ -166,7 +163,8 @@ export function AnalyticsPage() {
                 <p className="text-xs text-muted-foreground">Posted</p>
               </div>
               <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-none">
-                <p className="text-2xl font-bold text-blue-600">{draftContent}</p>
+                <p className="text-2xl font-bold text-blue-600">{draftContent}</p>My Content
+
                 <p className="text-xs text-muted-foreground">Drafts</p>
               </div>
               <div className="text-center p-3 bg-red-50 dark:bg-red-900/20 rounded-none">
@@ -180,10 +178,12 @@ export function AnalyticsPage() {
                 {Object.entries(platformCounts).map(([platform, count]) => (
                   <div key={platform} className="flex items-center gap-3">
                     <span className="text-xs font-medium w-24">{platform}</span>
-                    <Progress value={content.length ? (count / content.length) * 100 : 0} max={100} className="flex-1 h-1.5">
-                      <ProgressTrack><ProgressIndicator /></ProgressTrack>
-                    </Progress>
-                    <span className="text-xs text-muted-foreground w-12 text-right">{count}</span>
+                    <Progress
+                      value={content.total ? (Number(count) / content.total) * 100 : 0}
+                      max={100}
+                      className="flex-1 h-1.5"
+                    />
+                    <span className="text-xs text-muted-foreground w-12 text-right">{Number(count)}</span>
                   </div>
                 ))}
                 {Object.keys(platformCounts).length === 0 && (

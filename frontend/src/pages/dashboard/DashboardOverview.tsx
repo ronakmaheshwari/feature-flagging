@@ -10,7 +10,7 @@ import { Flag, Users, GitBranch, FileText, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function DashboardOverview() {
-  const { role } = useAuth();
+  const { role, token } = useAuth();
   const isAdmin = role === "ADMIN";
 
   const { data: flagsData } = useQuery({
@@ -32,8 +32,9 @@ export function DashboardOverview() {
   });
 
   const { data: contentData } = useQuery({
-    queryKey: ["content"],
-    queryFn: () => contentService.getAll(),
+    queryKey: ["content", "count"],
+    queryFn: () => contentService.count(),
+    enabled: !!token,
   });
 
   const { data: routeFlagsData } = useQuery({
@@ -44,12 +45,15 @@ export function DashboardOverview() {
 
   const flags = isAdmin ? flagsData?.data || [] : flagsNamesData?.data || [];
   const groups = groupsData?.data || [];
-  const content = contentData?.data || [];
+  const content = contentData?.data ?? { total: 0, draft: 0, published: 0, deleted: 0, platformCount: {} as Record<string, number> };
   const routeFlags = routeFlagsData?.data || [];
 
   const enabledFlags = flags.filter((f: any) => f.is_enabled).length;
-  const draftContent = content.filter((c: any) => c.status === "DRAFT").length;
-  const postedContent = content.filter((c: any) => c.status === "POSTED").length;
+  const draftContent = content.draft ?? 0;
+  const postedContent = content.published ?? 0;
+  const deletedContent = content.deleted ?? 0;
+
+  const platformCounts = content.platformCount || {};
 
   return (
     <div className="space-y-6">
@@ -87,7 +91,7 @@ export function DashboardOverview() {
         />
         <StatCard
           title={isAdmin ? "Total Groups" : "My Content"}
-          value={isAdmin ? groups.length : content.length}
+          value={isAdmin ? groups.length : content.total ?? 0}
           description={isAdmin ? "User groups configured" : "Content pieces created"}
           icon={isAdmin ? <Users className="size-5" /> : <FileText className="size-5" />}
           trend={{ value: isAdmin ? 8 : 15, label: "vs last month" }}

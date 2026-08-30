@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -18,6 +17,7 @@ import {
   User,
   LogOut,
   Badge as BadgeIcon,
+  X,
 } from "lucide-react";
 import { useAuth } from "@/components/custom/authContext";
 import { Badge } from "@/components/ui/badge";
@@ -33,39 +33,54 @@ const navigation = [
   { name: "Settings", href: "/dashboard/settings", icon: Settings, roles: ["USER", "ADMIN"] as const },
 ];
 
-export function Sidebar() {
+type SidebarProps = {
+  mobileOpen: boolean;
+  onMobileClose: () => void;
+  collapsed: boolean;
+  onToggleCollapse: () => void;
+};
+
+export function Sidebar({ mobileOpen, onMobileClose, collapsed, onToggleCollapse }: SidebarProps) {
   const { user, role, logout } = useAuth();
   const location = useLocation();
-  const [collapsed, setCollapsed] = React.useState(false);
 
   const filteredNav = navigation.filter((item) =>
-    role && (item.roles as readonly ("USER" | "ADMIN")[]).includes(role)
+    role ? (item.roles as readonly ("USER" | "ADMIN")[]).includes(role) : false
   );
 
-  return (
-    <aside
-      className={cn(
-        "fixed left-0 top-0 z-40 h-screen border-r border-border bg-sidebar transition-all duration-300 flex flex-col",
-        collapsed ? "w-16" : "w-64"
-      )}
-      data-collapsed={collapsed}
-    >
-      <div className="flex h-16 items-center justify-between px-4 border-b border-border">
-        {!collapsed && (
-          <NavLink to="/dashboard" className="flex items-center gap-2">
-            <BadgeIcon className="size-5 text-primary" />
-            <span className="font-mono font-bold text-lg">FlagOps</span>
+  const NavContent = ({ isMobile = false }: { isMobile?: boolean }) => (
+    <>
+      <div className="flex h-16 items-center justify-between gap-2 border-b border-border px-3 shrink-0">
+        {(!collapsed || isMobile) ? (
+          <NavLink to="/dashboard" className="flex items-center gap-2 min-w-0" onClick={isMobile ? onMobileClose : undefined}>
+            <BadgeIcon className="size-5 text-primary shrink-0" />
+            <span className="font-mono font-bold text-lg truncate">FlagOps</span>
           </NavLink>
+        ) : (
+          <div className="flex-1 flex justify-center">
+            <BadgeIcon className="size-5 text-primary" />
+          </div>
         )}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setCollapsed(!collapsed)}
-          className="h-8 w-8"
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          {collapsed ? <ChevronRight className="size-4" /> : <ChevronLeft className="size-4" />}
-        </Button>
+
+        {/* Desktop collapse button */}
+        {!isMobile && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onToggleCollapse}
+            className="h-8 w-8 shrink-0 hidden lg:inline-flex"
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {collapsed ? <ChevronRight className="size-4" /> : <ChevronLeft className="size-4" />}
+          </Button>
+        )}
+
+        {/* Mobile close */}
+        {isMobile && (
+          <Button variant="ghost" size="icon" onClick={onMobileClose} className="h-8 w-8 shrink-0" aria-label="Close sidebar">
+            <X className="size-4" />
+          </Button>
+        )}
       </div>
 
       <nav className="flex-1 overflow-y-auto p-3 space-y-1" role="navigation" aria-label="Main navigation">
@@ -75,61 +90,82 @@ export function Sidebar() {
             <NavLink
               key={item.name}
               to={item.href}
+              onClick={isMobile ? onMobileClose : undefined}
               className={cn(
-                "flex items-center gap-3 px-3 py-2 text-xs font-medium rounded-none transition-colors",
+                "flex items-center gap-3 rounded-none px-3 py-2 text-xs font-medium transition-colors",
                 "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                 isActive
                   ? "bg-sidebar-primary text-sidebar-primary-foreground"
                   : "text-sidebar-foreground/70 hover:text-sidebar-foreground",
-                collapsed && "justify-center"
+                collapsed && !isMobile && "justify-center px-2"
               )}
               aria-current={isActive ? "page" : undefined}
-              title={collapsed ? item.name : undefined}
+              title={collapsed && !isMobile ? item.name : undefined}
             >
               <item.icon className="size-4 shrink-0" aria-hidden="true" />
-              {!collapsed && <span>{item.name}</span>}
+              {(!collapsed || isMobile) && <span className="truncate">{item.name}</span>}
             </NavLink>
           );
         })}
       </nav>
 
-      <div className="p-3 border-t border-border">
-        {!collapsed ? (
+      <div className="border-t border-border p-3 shrink-0">
+        {!collapsed || isMobile ? (
           <div className="space-y-2">
             <div className="flex items-center gap-3 px-2 py-1.5">
-              <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center">
+              <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
                 <User className="size-4 text-primary" />
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium truncate">{user?.username || "User"}</p>
-                <p className="text-[10px] text-muted-foreground truncate">{user?.email}</p>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-xs font-medium">{user?.username || "User"}</p>
+                <p className="truncate text-[10px] text-muted-foreground">{user?.email}</p>
               </div>
-              <Badge variant="outline" className="text-[10px] capitalize">
+              <Badge variant="outline" className="shrink-0 text-[10px] capitalize">
                 {role?.toLowerCase() || "user"}
               </Badge>
             </div>
-            <Button
-              variant="outline"
-              className="w-full justify-start gap-2"
-              onClick={logout}
-            >
+            <Button variant="outline" className="w-full justify-start gap-2" onClick={logout}>
               <LogOut className="size-3.5" />
               <span>Sign Out</span>
             </Button>
           </div>
         ) : (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={logout}
-            className="mx-auto"
-            aria-label="Sign out"
-            title="Sign Out"
-          >
+          <Button variant="ghost" size="icon" onClick={logout} className="mx-auto flex" aria-label="Sign out" title="Sign Out">
             <LogOut className="size-4" />
           </Button>
         )}
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* Desktop sidebar - flex child, not fixed */}
+      <aside
+        className={cn(
+          "hidden shrink-0 flex-col border-r border-border bg-sidebar transition-all duration-300 lg:flex",
+          collapsed ? "w-16" : "w-64"
+        )}
+        data-collapsed={collapsed}
+      >
+        <NavContent />
+      </aside>
+
+      {/* Mobile overlay */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={onMobileClose} aria-hidden="true" />
+      )}
+
+      {/* Mobile drawer */}
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-border bg-sidebar shadow-xl transition-transform duration-300 lg:hidden",
+          mobileOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+        aria-hidden={!mobileOpen}
+      >
+        <NavContent isMobile />
+      </aside>
+    </>
   );
 }

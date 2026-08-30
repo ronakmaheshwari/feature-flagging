@@ -1,61 +1,50 @@
 import * as React from "react";
 import { Outlet } from "react-router-dom";
-import { cn } from "@/lib/utils";
 import { Sidebar } from "./sidebar";
 import { Header } from "./header";
 
 export function DashboardLayout() {
-  const [sidebarOpen, setSidebarOpen] = React.useState(false);
-
-  const isMobile = React.useMemo(() => {
-    if (typeof window === "undefined") return false;
-    return window.innerWidth < 1024;
-  }, []);
+  const [mobileOpen, setMobileOpen] = React.useState(false);
+  const [collapsed, setCollapsed] = React.useState(false);
 
   React.useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 1024) {
-        setSidebarOpen(false);
+        setMobileOpen(false);
       }
     };
+
     window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
   }, []);
 
   return (
-    <div className="min-h-screen bg-background">
-      <Sidebar />
-      <div
-        className={cn(
-          "transition-all duration-300 lg:pl-64",
-          isMobile && sidebarOpen ? "pl-64" : ""
-        )}
-      >
-        <Header />
-        <main
-          className={cn(
-            "p-4 lg:p-6 pt-20 lg:pt-6 min-h-[calc(100vh-4rem)]",
-            isMobile && sidebarOpen && "pl-16"
-          )}
-          role="main"
-        >
+    <div className="flex h-dvh w-full overflow-hidden bg-background">
+      <Sidebar
+        mobileOpen={mobileOpen}
+        onMobileClose={() => setMobileOpen(false)}
+        collapsed={collapsed}
+        onToggleCollapse={() => setCollapsed((c) => !c)}
+      />
+
+      {/* isolate creates new stacking context so header (z-10) never covers mobile drawer (z-50) */}
+      <div className="flex min-w-0 min-h-0 flex-1 flex-col overflow-hidden isolate">
+        <Header onMenuClick={() => setMobileOpen(true)} />
+
+        <main className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto p-4 lg:p-6">
           <Outlet />
         </main>
       </div>
-      {isMobile && sidebarOpen && (
-        <div
-          className="fixed inset-0 z-30 bg-black/50 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-          aria-hidden="true"
-        />
-      )}
     </div>
   );
 }
 
 export function PublicLayout() {
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="flex h-dvh w-full items-center justify-center overflow-hidden bg-background p-4">
       <Outlet />
     </div>
   );

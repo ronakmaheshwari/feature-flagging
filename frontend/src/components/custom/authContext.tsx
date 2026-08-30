@@ -82,14 +82,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [token, fetchUser]);
 
   const logout = async () => {
+    await api.patch("/user/logout", {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
     localStorage.removeItem("token");
     setToken(null);
     setUser(null);
     setRole(null);
-    await api.patch("/user/logout", {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    )
     delete api.defaults.headers.common["Authorization"];
   };
 

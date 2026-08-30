@@ -232,6 +232,11 @@ const contentService = {
     return response.data;
   },
 
+  count: async () => {
+    const response = await api.get("/content/count");
+    return response.data
+  },
+
   create: async (data: {
     topic: string;
     content: string;
