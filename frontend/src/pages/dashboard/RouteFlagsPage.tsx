@@ -24,7 +24,23 @@ export function RouteFlagsPage() {
     staleTime: 30000,
   });
 
-  const routes = routesData?.data || [];
+  const rawRoutes: any[] = React.useMemo(() => {
+    if (!routesData) return [];
+    const d: any = routesData as any;
+    if (Array.isArray(d.data)) return d.data;
+    if (d.data && Array.isArray(d.data.data)) return d.data.data;
+    return [];
+  }, [routesData]);
+
+  const filteredRoutes = React.useMemo(() => {
+    if (!search) return rawRoutes;
+    const q = search.toLowerCase();
+    return rawRoutes.filter((r: any) =>
+      r.path?.toLowerCase().includes(q) ||
+      r.method?.toLowerCase().includes(q) ||
+      r.flagName?.toLowerCase().includes(q)
+    );
+  }, [rawRoutes, search]);
 
   const columns: Column<any>[] = [
     {
@@ -39,16 +55,16 @@ export function RouteFlagsPage() {
     },
     { key: "path", header: "Path", sortable: true },
     { key: "flagName", header: "Flag Name", sortable: true },
-    { key: "createdAt", header: "Created", sortable: true, render: (v) => new Date(v as string).toLocaleDateString() },
+    { key: "createdAt", header: "Created", sortable: true, render: (v) => v ? new Date(v as string).toLocaleDateString() : "-" },
     {
       key: "actions",
       header: "Actions",
       render: (_, row) => (
         <div className="flex items-center justify-end gap-1">
-          <Button variant="ghost" size="icon" onClick={() => { setSelectedRoute(row); setShowEditModal(true); }} className="h-7 w-7" aria-label="Edit">
+          <Button type="button" variant="ghost" size="icon" onClick={() => { setSelectedRoute(row); setShowEditModal(true); }} className="h-7 w-7" aria-label="Edit">
             <Edit className="size-3.5" />
           </Button>
-          <Button variant="ghost" size="icon" onClick={() => setDeleteConfirm({ method: row.method, path: row.path })} className="h-7 w-7 text-destructive" aria-label="Delete">
+          <Button type="button" variant="ghost" size="icon" onClick={() => setDeleteConfirm({ method: row.method, path: row.path })} className="h-7 w-7 text-destructive" aria-label="Delete">
             <Trash2 className="size-3.5" />
           </Button>
         </div>
@@ -95,7 +111,7 @@ export function RouteFlagsPage() {
           <h1 className="text-2xl font-bold tracking-tight">Route Flags</h1>
           <p className="text-muted-foreground">Map routes to feature flags for automatic evaluation.</p>
         </div>
-        <Button onClick={() => setShowCreateModal(true)}>
+        <Button type="button" onClick={() => setShowCreateModal(true)}>
           <Plus className="size-4 mr-2" />
           Add Route Flag
         </Button>
@@ -111,14 +127,14 @@ export function RouteFlagsPage() {
             className="pl-10"
           />
         </div>
-        <Button variant="outline" onClick={() => refetch()}>
+        <Button type="button" variant="outline" onClick={() => refetch()}>
           <RefreshCw className="size-4 mr-2" />
           Refresh
         </Button>
       </div>
 
       <DataTable
-        data={routes}
+        data={filteredRoutes}
         columns={columns}
         keyExtractor={(row) => `${row.method}:${row.path}`}
         loading={isLoading}
@@ -177,6 +193,16 @@ function RouteFlagForm({
     path: defaultValues?.path || "",
     flagName: defaultValues?.flagName || "",
   });
+
+  React.useEffect(() => {
+    if (defaultValues) {
+      setFormData({
+        method: defaultValues.method || "GET",
+        path: defaultValues.path || "",
+        flagName: defaultValues.flagName || "",
+      });
+    }
+  }, [defaultValues]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

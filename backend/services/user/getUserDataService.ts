@@ -10,6 +10,7 @@ const userDataService = async (userId: string): Promise<boolean | UserDataInterf
             id: true,
             username: true,
             email: true,
+            role: true,
             createdAt: true,
             user_status: true,
             group: {
@@ -30,6 +31,7 @@ const userDataService = async (userId: string): Promise<boolean | UserDataInterf
     return {
         id: getData.id,
         username: getData.username,
+        role: getData.role,
         email: getData.email,
         createdAt: new Date(getData.createdAt),
         userStatus: getData.user_status,

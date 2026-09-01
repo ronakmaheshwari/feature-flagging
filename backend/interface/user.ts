@@ -1,3 +1,4 @@
+import type { ROLES } from "@prisma/client"
 
 export interface SignupInterface {
     success: boolean,
@@ -8,6 +9,7 @@ export interface SignupInterface {
 export interface UserDataInterface {
     id: string,
     username: string,
+    role: ROLES,
     email: string,
     createdAt: Date,
     userStatus: string,

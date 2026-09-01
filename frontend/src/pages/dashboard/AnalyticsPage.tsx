@@ -9,7 +9,7 @@ import { Flag, Users, GitBranch } from "lucide-react";
 import { useAuth } from "@/components/custom/authContext";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 
 export function AnalyticsPage() {
   const { token } = useAuth();
@@ -34,6 +34,7 @@ export function AnalyticsPage() {
     queryKey: ["groups"],
     queryFn: () => groupService.getAll(),
     staleTime: 60000,
+    enabled: !!token,
   });
 
   const { data: contentData } = useQuery({
@@ -47,22 +48,60 @@ export function AnalyticsPage() {
     queryKey: ["route-flags"],
     queryFn: () => routeFlagService.getAll(),
     staleTime: 60000,
+    enabled: !!token,
   });
 
-  const flags = flagsData?.data || [];
-  const groups = groupsData?.data || [];
-  const content = contentData?.data || [];
-  const routes = routesData?.data || [];
+  const flags: any[] = useMemo(() => {
+    const d: any = flagsData as any;
+    if (!d) return [];
+    if (Array.isArray(d.data)) return d.data;
+    if (d.data && Array.isArray(d.data.data)) return d.data.data;
+    return [];
+  }, [flagsData]);
+
+  const rawGroups: any[] = useMemo(() => {
+    const d: any = groupsData as any;
+    if (!d) return [];
+    if (Array.isArray(d?.data)) return d.data;
+    if (d?.data && Array.isArray(d.data.data)) return d.data.data;
+    return [];
+  }, [groupsData]);
+
+  const groups = useMemo(() => rawGroups.map((g: any) => ({
+    ...g,
+    id: g.id ?? g.name,
+    totalUsers: g.totalUsers ?? g.total_users ?? 0,
+  })), [rawGroups]);
+
+  const contentStats: any = useMemo(() => {
+    const d: any = contentData as any;
+    if (!d) return {};
+    // contentService.count returns { success, data: { total, draft, published, deleted, platformCount } }
+    if (d.data && typeof d.data === "object" && !Array.isArray(d.data)) {
+      // handle double-wrap: d.data.data
+      if (d.data.data && typeof d.data.data === "object") return d.data.data;
+      return d.data;
+    }
+    return {};
+  }, [contentData]);
+
+  const routes: any[] = useMemo(() => {
+    const d: any = routesData as any;
+    if (!d) return [];
+    if (Array.isArray(d.data)) return d.data;
+    if (d.data && Array.isArray(d.data.data)) return d.data.data;
+    return [];
+  }, [routesData]);
 
   const enabledFlags = flags.filter((f: any) => f.is_enabled === true).length;
   const disabledFlags = flags.length - enabledFlags;
   const devFlags = flags.filter((f: any) => f.environment === "DEVELOPMENT").length;
   const prodFlags = flags.filter((f: any) => f.environment === "PRODUCTION").length;
-  const draftContent = content.draft;
-  const postedContent = content.published;
-  const deletedContent = content.deleted;
+  const draftContent = contentStats.draft ?? 0;
+  const postedContent = contentStats.published ?? 0;
+  const deletedContent = contentStats.deleted ?? 0;
 
-  const platformCounts = content.platformCount || {};
+  const platformCounts = contentStats.platformCount || {};
 
   return (
     <div className="space-y-6">
@@ -163,8 +202,7 @@ export function AnalyticsPage() {
                 <p className="text-xs text-muted-foreground">Posted</p>
               </div>
               <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-none">
-                <p className="text-2xl font-bold text-blue-600">{draftContent}</p>My Content
-
+                <p className="text-2xl font-bold text-blue-600">{draftContent}</p>
                 <p className="text-xs text-muted-foreground">Drafts</p>
               </div>
               <div className="text-center p-3 bg-red-50 dark:bg-red-900/20 rounded-none">
@@ -179,7 +217,7 @@ export function AnalyticsPage() {
                   <div key={platform} className="flex items-center gap-3">
                     <span className="text-xs font-medium w-24">{platform}</span>
                     <Progress
-                      value={content.total ? (Number(count) / content.total) * 100 : 0}
+                      value={contentStats.total ? (Number(count) / contentStats.total) * 100 : 0}
                       max={100}
                       className="flex-1 h-1.5"
                     />
@@ -206,7 +244,7 @@ export function AnalyticsPage() {
             ) : (
               <div className="space-y-3">
                 {groups
-                  .sort((a: any, b: any) => b.totalUsers - a.totalUsers)
+                  .sort((a: any, b: any) => (b.totalUsers ?? 0) - (a.totalUsers ?? 0))
                   .slice(0, 5)
                   .map((group: any) => (
                     <div key={group.id} className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">

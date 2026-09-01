@@ -29,7 +29,7 @@ export function Header({
 }: {
   onMenuClick?: () => void;
 }) {
-  const { user, role, token, logout } = useAuth();
+  const { user, role, logout } = useAuth();
   const { theme, setTheme } = useTheme();
 
   const toggleTheme = () => {

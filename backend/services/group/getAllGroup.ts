@@ -46,14 +46,12 @@ export const getAllGroupService = async (
     const allGroups = await db.group.findMany({
         where,
         select: {
+            id: true,
             name: true,
             total_users: true,
-            user: {
-                select: {
-                    id: true,
-                    email: true
-                }
-            }
+            createdAt: true,
+            updatedAt: true,
+            userId: true,
         },
         orderBy: {
             name: "asc"

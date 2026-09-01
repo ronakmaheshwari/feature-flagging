@@ -35,8 +35,6 @@ interface OtpCardProps {
 const OtpCard = ({
   isLoading = false,
   errorMessage = null,
-  onVerify,
-  onResend,
 }: OtpCardProps) => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -263,7 +261,7 @@ const OtpCard = ({
       const otpVerification = await api.patch(`/user/${rawEmail}`);
       return otpVerification.data
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       toast.success(`New 6-digit authentication token dispatched to ${rawEmail}`);
     },
     onError: (data: any) => {

@@ -3,7 +3,10 @@ import z from "zod";
 
 export const toggleFlagValidation = z.object({
     flagId: z.string({error: "You must provide the flag Id"}),
-    isEnabled: z.boolean({error: "It must either be true or false only"})
+    isEnabled: z.union([
+        z.boolean(),
+        z.string().transform((v) => v === "true" || v === "1")
+    ])
 });
 
 export const evaluateUserFlagValidation = z.object({
@@ -17,7 +20,7 @@ export const flagValidation = z.object({
 
 export const listSchema = z.object({
     userId: z.string({error: "User Id must be string"}).min(1,{error: "User Id should have atleast one character"}),
-    group: z.array(z.string()),
+    group: z.array(z.string()).optional().default([]),
 });
 
 export const changeRulesValidation = z.object({

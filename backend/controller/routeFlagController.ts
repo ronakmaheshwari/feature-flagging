@@ -3,6 +3,7 @@ import { addRouterValidation, deleteRouterValidation } from "../validation/route
 import { addNewRouterService } from "../services/router-flag/addNewRouterService";
 import { changeRouteFlag } from "../services/router-flag/changeRouteFlagService";
 import { deletRouterService } from "../services/router-flag/deleteRouterService";
+import { getAllRouterService } from "../services/router-flag/getAllRouterService";
 
 export const addNewRouterController = async (
     req: Request,
@@ -112,6 +113,34 @@ export const deleteRouterFlagController = async (
         return res.status(errorCode).json({
             success: success,
             message: message
+        })
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal error occured"
+        })
+    }
+}
+
+export const getAllRouterController = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const role = req.role;
+        if(role !== "ADMIN" && !req.userId) {
+            return res.status(401).json({
+                success: false,
+                message: "You are unauthorized to access these services"
+            })
+        }
+        const {errorCode, success, message, data} = await getAllRouterService();
+        return res.status(errorCode).json({
+            success,
+            message,
+            data
         })
     } catch (error) {
         console.error(error);

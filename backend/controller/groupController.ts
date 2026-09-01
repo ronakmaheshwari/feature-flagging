@@ -42,9 +42,10 @@ export const getAllGroup = async (
 
         const groups = await getAllGroupService(userId, role, parsedSearch.data, parsedFilter.data);
 
-        return res.status(200).json({
-            success: true,
-            data: groups,
+        return res.status(groups.errorCode).json({
+            success: groups.success,
+            message: groups.message,
+            data: groups.data,
         });
     } catch (error) {
         console.error(error);

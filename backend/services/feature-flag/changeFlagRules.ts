@@ -35,15 +35,23 @@ export const changeFlagRulesService = async (
     const whitelist = Array.isArray(rules.whitelist) ? rules.whitelist : rules.whitelist ? [rules.whitelist] : [];
     const group = Array.isArray(rules.groups) ? rules.groups : rules.groups ? [rules.groups] : [];
 
-    const updatedBlacklist = [...blacklist, ...((Array.isArray(data.blacklist) ? data.blacklist : data.blacklist ? [data.blacklist] : []))];
-    const updatedWhitelist = [...whitelist, ...((Array.isArray(data.whitelist) ? data.whitelist : data.whitelist ? [data.whitelist] : []))];
-    const updatedGroup = [...group, ...((Array.isArray(data.groups) ? data.groups : data.groups ? [data.groups] : []))];
+    const updatedBlacklist = data.blacklist !== undefined 
+        ? (Array.isArray(data.blacklist) ? data.blacklist : [data.blacklist])
+        : blacklist;
+    const updatedWhitelist = data.whitelist !== undefined 
+        ? (Array.isArray(data.whitelist) ? data.whitelist : [data.whitelist])
+        : whitelist;
+    const updatedGroup = data.groups !== undefined 
+        ? (Array.isArray(data.groups) ? data.groups : [data.groups])
+        : group;
     
     const updatedRules: FeatureFlagRules = {
         blacklist: updatedBlacklist,
         whitelist: updatedWhitelist,
         groups: updatedGroup,
     };
+
+    const rolloutValue = typeof data.rollout === "number" ? data.rollout : findFlag.rollout;
 
     const updateFlagRules = await db.$transaction(async (tx: Prisma.TransactionClient) => {
         const flag = await tx.feature_Flag.update({
@@ -52,9 +60,9 @@ export const changeFlagRulesService = async (
             },
             data: {
                 rules: updatedRules as unknown as Prisma.InputJsonValue,
-                rollout: data.rollout
+                rollout: rolloutValue
             }
-        })
+        });
 
         await tx.feature_Flag_Audit.create({
             data: {
@@ -65,14 +73,14 @@ export const changeFlagRulesService = async (
                 },
                 new_value: {
                     rules: flag.rules,
-                    rollout: findFlag.rollout
+                    rollout: flag.rollout
                 },
                 updatedBy: findAdmin.id as string
             }
-        })
+        });
 
         return flag;
-    })
+    });
 
     return { success: true, errorCode: 200, message: "Flag rules updated successfully", data: updateFlagRules };
 }

@@ -182,7 +182,11 @@ export const toggleFlagController = async (
             })
         }
 
-        const parsed = toggleFlagValidation.safeParse(req.query);
+        const dataToParse = {
+            flagId: req.body?.flagId || req.query?.flagId,
+            isEnabled: req.body?.isEnabled !== undefined ? req.body.isEnabled : req.query?.isEnabled,
+        };
+        const parsed = toggleFlagValidation.safeParse(dataToParse);
         if(!parsed.success) {
             return res.status(409).json({
                 success: false,

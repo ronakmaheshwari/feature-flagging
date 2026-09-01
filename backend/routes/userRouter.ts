@@ -1,11 +1,12 @@
 import { Router } from "express";
-import { forgetPasswordController, forgetPasswordOTPController, logoutUser, otpVerificationController, userDetailsController, userLoginController, userSignupController, userVerificationController } from "../controller/userController";
+import { forgetPasswordController, forgetPasswordOTPController, getAllUsersController, logoutUser, otpVerificationController, userDetailsController, userLoginController, userSignupController, userVerificationController } from "../controller/userController";
 import userMiddleware from "../utils/middleware/middleware";
 import { otpLimiter } from "../utils/ratelimit/ratelimitConfig";
 
 const userRouter: Router = Router();
 
 userRouter.get("/me", userMiddleware, userDetailsController); 
+userRouter.get("/users", userMiddleware, getAllUsersController);
 userRouter.post("/signup", userSignupController);
 userRouter.post("/login", userLoginController);
 userRouter.patch("/logout", userMiddleware, logoutUser); 

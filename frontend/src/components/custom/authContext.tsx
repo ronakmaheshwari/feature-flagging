@@ -52,7 +52,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (response.status === 200 && response.data) {
           const userData = response.data;
           setUser(userData);
-          const isAdmin = userData.groups?.some((g: { name: string }) => g.name === "ADMIN");
+          const isAdmin = userData.role
           setRole(isAdmin ? "ADMIN" : "USER");
         }
     } catch (error) {
@@ -82,14 +82,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [token, fetchUser]);
 
   const logout = async () => {
-    await api.patch("/user/logout", {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
+    const tokenData = localStorage.getItem("token"); 
     localStorage.removeItem("token");
     setToken(null);
     setUser(null);
     setRole(null);
+    await api.patch("/user/logout", {
+        headers: { Authorization: `Bearer ${tokenData}` },
+      }
+    );
     delete api.defaults.headers.common["Authorization"];
   };
 

@@ -149,7 +149,7 @@ const AuditTimelineItem = ({ log, isLast }: AuditTimelineItemProps) => {
           <div className="p-3 space-y-3">
             {" "}
             {/* User content */}{" "}
-            {value.userContent && (
+            {typeof value.userContent === "string" && value.userContent && (
               <AuditField
                 icon={<MessageSquare className="size-3.5" />}
                 label="User Input"
@@ -157,7 +157,7 @@ const AuditTimelineItem = ({ log, isLast }: AuditTimelineItemProps) => {
               />
             )}{" "}
             {/* Generated content */}{" "}
-            {value.promptContent && (
+            {typeof value.promptContent === "string" && value.promptContent && (
               <AuditField
                 icon={<Sparkles className="size-3.5" />}
                 label="Generated Content"
@@ -166,7 +166,7 @@ const AuditTimelineItem = ({ log, isLast }: AuditTimelineItemProps) => {
               />
             )}{" "}
             {/* Technical details */}{" "}
-            {(value.prompt || value.old_value) && (
+            {Boolean(value.prompt || log.old_value) && (
               <button
                 type="button"
                 onClick={() => setExpanded(!expanded)}

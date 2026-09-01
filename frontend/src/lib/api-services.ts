@@ -9,7 +9,6 @@ export interface FeatureFlag {
     whitelist?: Array<{ userId: string; group?: string[] }>;
     blacklist?: Array<{ userId: string; group?: string[] }>;
     groups?: string[];
-    rollout?: number;
   };
   rollout: number;
   createdAt: string;
@@ -104,13 +103,13 @@ const featureFlagService = {
     return response.data;
   },
 
-  getNames: async (all: boolean = false): Promise<PaginatedResponse<{ id: string; name: string }>> => {
-    const response = await api.get("/feature-flags/", { params: { all: all.toString() } });
+  getNames: async (_all: boolean = false): Promise<PaginatedResponse<{ id: string; name: string }>> => {
+    const response = await api.get("/feature-flags/filter");
     return response.data;
   },
 
   getDetails: async (flagId: string): Promise<ApiResponse<FeatureFlagDetail>> => {
-    const response = await api.get(`/feature-flags/${flagId}`);
+    const response = await api.get(`/feature-flags/details/${flagId}`);
     return response.data;
   },
 
@@ -126,14 +125,16 @@ const featureFlagService = {
     };
     rollout?: number;
   }): Promise<ApiResponse<FeatureFlag>> => {
-    const response = await api.post("/feature-flags", data);
+    const response = await api.post("/feature-flags/new", data);
     return response.data;
   },
 
   toggle: async (flagId: string, isEnabled: boolean): Promise<ApiResponse<void>> => {
-    const response = await api.patch(`/feature-flags/${flagId}/toggle`, null, {
-      params: { isEnabled },
-    });
+    const response = await api.patch(
+      `/feature-flags/toggle`,
+      { flagId, isEnabled },
+      { params: { flagId, isEnabled } }
+    );
     return response.data;
   },
 
@@ -151,27 +152,27 @@ const featureFlagService = {
       rollout?: number;
     }
   ): Promise<ApiResponse<void>> => {
-    const response = await api.patch(`/feature-flags/${flagId}/rules`, rules);
+    const response = await api.patch(`/feature-flags/change/${flagId}`, rules);
     return response.data;
   },
 
   addWhitelist: async (flagId: string, userId: string): Promise<ApiResponse<void>> => {
-    const response = await api.post(`/feature-flags/${flagId}/whitelist/${userId}`);
+    const response = await api.patch(`/feature-flags/whitelist/${flagId}/${userId}`);
     return response.data;
   },
 
   addBlacklist: async (flagId: string, userId: string): Promise<ApiResponse<void>> => {
-    const response = await api.post(`/feature-flags/${flagId}/blacklist/${userId}`);
+    const response = await api.patch(`/feature-flags/blacklist/${flagId}/${userId}`);
     return response.data;
   },
 
   addGroup: async (flagId: string, groupId: string): Promise<ApiResponse<void>> => {
-    const response = await api.post(`/feature-flags/${flagId}/groups/${groupId}`);
+    const response = await api.patch(`/feature-flags/group/${flagId}/${groupId}`);
     return response.data;
   },
 
   evaluate: async (flagId: string, userId: string): Promise<FlagEvaluationResult> => {
-    const response = await api.get(`/feature-flags/${flagId}/evaluate/${userId}`);
+    const response = await api.patch(`/feature-flags/evaluate/${flagId}/${userId}`);
     return response.data;
   },
 
@@ -184,35 +185,42 @@ const featureFlagService = {
 const groupService = {
   getAll: async (params?: {
     search?: string;
+    description?: string;
     name?: string;
     totalUser?: number;
   }): Promise<PaginatedResponse<Group>> => {
-    const response = await api.get("/groups", { params });
+    // Backend validation expects `description` for search; support both `search` and `description`
+    const mapped: Record<string, unknown> = {};
+    if (params?.search) mapped.description = params.search;
+    if (params?.description) mapped.description = params.description;
+    if (params?.name) mapped.name = params.name;
+    if (params?.totalUser !== undefined) mapped.totalUser = params.totalUser;
+    const response = await api.get("/group", { params: mapped });
     return response.data;
   },
 
   create: async (name: string): Promise<ApiResponse<Group>> => {
-    const response = await api.post("/groups", { name });
+    const response = await api.post("/group/create", { name });
     return response.data;
   },
 
   updateName: async (groupId: string, name: string): Promise<ApiResponse<Group>> => {
-    const response = await api.patch(`/groups/${groupId}`, { name });
+    const response = await api.patch(`/group/change/${groupId}`, { name });
     return response.data;
   },
 
   addUser: async (groupId: string, email: string): Promise<ApiResponse<void>> => {
-    const response = await api.post(`/groups/${groupId}/users`, null, { params: { email } });
+    const response = await api.patch(`/group/add/${groupId}`, null, { params: { email } });
     return response.data;
   },
 
   removeUser: async (groupId: string, email: string): Promise<ApiResponse<void>> => {
-    const response = await api.delete(`/groups/${groupId}/users`, { params: { email } });
+    const response = await api.patch(`/group/remove/${groupId}`, null, { params: { email } });
     return response.data;
   },
 
   delete: async (groupId: string): Promise<ApiResponse<void>> => {
-    const response = await api.delete(`/groups/${groupId}`);
+    const response = await api.delete(`/group/${groupId}`);
     return response.data;
   },
 };
@@ -272,22 +280,22 @@ const contentAuditService = {
 
 const routeFlagService = {
   getAll: async (): Promise<PaginatedResponse<RouteFlag>> => {
-    const response = await api.get("/route-flags");
+    const response = await api.get("/router");
     return response.data;
   },
 
   create: async (data: { method: string; path: string; flagName: string }): Promise<ApiResponse<RouteFlag>> => {
-    const response = await api.post("/route-flags", data);
+    const response = await api.post("/router/add", data);
     return response.data;
   },
 
   update: async (data: { method: string; path: string; flagName: string }): Promise<ApiResponse<RouteFlag>> => {
-    const response = await api.patch("/route-flags", data);
+    const response = await api.post("/router/change", data);
     return response.data;
   },
 
   delete: async (method: string, path: string): Promise<ApiResponse<void>> => {
-    const response = await api.delete("/route-flags", { params: { method, path } });
+    const response = await api.delete("/router/remove", { params: { method, path } });
     return response.data;
   },
 };
@@ -295,6 +303,13 @@ const routeFlagService = {
 const userService = {
   getMe: async (): Promise<ApiResponse<UserData>> => {
     const response = await api.get("/user/me");
+    return response.data;
+  },
+  getUser: async (username?: string): Promise<ApiResponse<UserData[]>> => {
+    const response = await api.get("/user/users", {
+      params: username ? { username } : {},
+    });
+
     return response.data;
   },
 };

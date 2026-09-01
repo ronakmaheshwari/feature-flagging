@@ -2,8 +2,8 @@ import { ROLES } from "@prisma/client";
 import z, { email } from "zod";
 
 export const userSignupValidation = z.object({
-    username: z.string().trim().min(3, {
-        error: "Your Username must atleast be more than 3 characters"
+    username: z.string().trim().min(2, {
+        error: "Your Username must atleast be more than 2 characters"
     }).max(30, {
         error: "Your Username must be less than 30 characters"
     }),
@@ -42,9 +42,12 @@ export const forgetPasswordOTPVerificationValidation = z.object({
     }).min(8, "Your password must have atleast 8 characters")
 })
 
+export const searchUserNameValidation = z.string({error: "Invalid data was provided"}).optional();
+
 export type userSignupValidationType = z.infer<typeof userSignupValidation>;
 export type userLoginValidationType = z.infer<typeof userLoginValidation>;
 export type otpVerificationType = z.infer<typeof otpVerificationValidation>;
 export type otpCodeVerificationType = z.infer<typeof otpCodeVerificationValidation>;
 export type linkVerificationValidationType = z.infer<typeof linkVerificationValidation>;
 export type forgetPasswordOTPVerificationValidationType = z.infer<typeof forgetPasswordOTPVerificationValidation>;
+export type searchUserNameValidationType = z.infer<typeof searchUserNameValidation>;

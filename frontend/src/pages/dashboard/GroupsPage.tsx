@@ -21,28 +21,50 @@ export function GroupsPage() {
 
   const { data: groupsData, isLoading, refetch } = useQuery({
     queryKey: ["groups", search],
-    queryFn: () => groupService.getAll({ search }),
+    queryFn: () => groupService.getAll(search ? { description: search } : undefined),
     staleTime: 30000,
   });
 
-  const groups = groupsData?.data || [];
+  // Backend returns { success, data: [...] } but previously double-wrapped and uses snake_case total_users
+  // Normalize: handle both { data: [...] } and { data: { data: [...] } } and map total_users -> totalUsers
+  const rawGroups: any[] = React.useMemo(() => {
+    if (!groupsData) return [];
+    const d: any = groupsData as any;
+    // groupService returns response.data which is { success, data: Group[] } after fix, but handle legacy double-wrap
+    if (Array.isArray(d.data)) return d.data;
+    if (d.data && Array.isArray(d.data.data)) return d.data.data;
+    return [];
+  }, [groupsData]);
+
+  const groups = React.useMemo(() => {
+    const mapped = rawGroups.map((g: any) => ({
+      ...g,
+      id: g.id ?? g.name,
+      totalUsers: g.totalUsers ?? g.total_users ?? 0,
+      createdAt: g.createdAt ?? g.created_at ?? null,
+    }));
+    // Client-side fallback filtering when backend search is not applied (description filter)
+    if (!search) return mapped;
+    const q = search.toLowerCase();
+    return mapped.filter((g: any) => g.name?.toLowerCase().includes(q));
+  }, [rawGroups, search]);
 
   const columns: Column<any>[] = [
     { key: "name", header: "Name", sortable: true },
     { key: "totalUsers", header: "Users", sortable: true },
-    { key: "createdAt", header: "Created", sortable: true, render: (v) => new Date(v as string).toLocaleDateString() },
+    { key: "createdAt", header: "Created", sortable: true, render: (v) => v ? new Date(v as string).toLocaleDateString() : "-" },
     {
       key: "actions",
       header: "Actions",
       render: (_, row) => (
         <div className="flex items-center justify-end gap-1">
-          <Button variant="ghost" size="icon" onClick={() => { setSelectedGroup(row); setShowManageUsersModal(true); }} className="h-7 w-7" aria-label="Manage users">
+          <Button type="button" variant="ghost" size="icon" onClick={() => { setSelectedGroup(row); setShowManageUsersModal(true); }} className="h-7 w-7" aria-label="Manage users">
             <Users className="size-3.5" />
           </Button>
-          <Button variant="ghost" size="icon" onClick={() => { setSelectedGroup(row); setShowEditModal(true); }} className="h-7 w-7" aria-label="Edit">
+          <Button type="button" variant="ghost" size="icon" onClick={() => { setSelectedGroup(row); setShowEditModal(true); }} className="h-7 w-7" aria-label="Edit">
             <Edit className="size-3.5" />
           </Button>
-          <Button variant="ghost" size="icon" onClick={() => setDeleteConfirm(row.id)} className="h-7 w-7 text-destructive" aria-label="Delete">
+          <Button type="button" variant="ghost" size="icon" onClick={() => setDeleteConfirm(row.id)} className="h-7 w-7 text-destructive" aria-label="Delete">
             <Trash2 className="size-3.5" />
           </Button>
         </div>
@@ -105,7 +127,7 @@ export function GroupsPage() {
           <h1 className="text-2xl font-bold tracking-tight">Groups</h1>
           <p className="text-muted-foreground">Manage user groups for feature flag targeting.</p>
         </div>
-        <Button onClick={() => setShowCreateModal(true)}>
+        <Button type="button" onClick={() => setShowCreateModal(true)}>
           <Plus className="size-4 mr-2" />
           Create Group
         </Button>
@@ -121,7 +143,7 @@ export function GroupsPage() {
             className="pl-10"
           />
         </div>
-        <Button variant="outline" onClick={() => refetch()}>
+        <Button type="button" variant="outline" onClick={() => refetch()}>
           <RefreshCw className="size-4 mr-2" />
           Refresh
         </Button>
@@ -158,7 +180,7 @@ export function GroupsPage() {
             onAddUser={(email) => addUserMutation.mutate({ groupId: selectedGroup.id, email })}
             onRemoveUser={(email) => removeUserMutation.mutate({ groupId: selectedGroup.id, email })}
             adding={addUserMutation.isPending}
-            removing={false}
+            removing={removeUserMutation.isPending}
           />
         )}
       </Modal>
@@ -178,6 +200,10 @@ export function GroupsPage() {
 
 function GroupForm({ onSubmit, onCancel, loading, defaultName = "" }: { onSubmit: (name: string) => void; onCancel: () => void; loading: boolean; defaultName?: string }) {
   const [name, setName] = React.useState(defaultName);
+
+  React.useEffect(() => {
+    setName(defaultName);
+  }, [defaultName]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -208,7 +234,9 @@ function ManageGroupUsers({
   group,
   onClose,
   onAddUser,
+  onRemoveUser,
   adding,
+  removing,
 }: {
   group: any;
   onClose: () => void;
@@ -218,6 +246,7 @@ function ManageGroupUsers({
   removing: boolean;
 }) {
   const [email, setEmail] = React.useState("");
+  const [removeEmail, setRemoveEmail] = React.useState("");
 
   const handleAddUser = (e: React.FormEvent) => {
     e.preventDefault();
@@ -226,6 +255,16 @@ function ManageGroupUsers({
       setEmail("");
     }
   };
+
+  const handleRemoveUser = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (removeEmail.trim()) {
+      onRemoveUser(removeEmail.trim());
+      setRemoveEmail("");
+    }
+  };
+
+  const totalUsers = group.totalUsers ?? group.total_users ?? 0;
 
   return (
     <div className="space-y-4">
@@ -243,16 +282,29 @@ function ManageGroupUsers({
         </Button>
       </form>
 
+      <form onSubmit={handleRemoveUser} className="flex gap-2">
+        <Input
+          type="email"
+          value={removeEmail}
+          onChange={(e) => setRemoveEmail(e.target.value)}
+          placeholder="Enter user email to remove"
+          className="flex-1"
+        />
+        <Button type="submit" variant="outline" disabled={removing || !removeEmail.trim()}>
+          {removing ? "Removing..." : <Trash2 className="size-4" />}
+        </Button>
+      </form>
+
       <div className="max-h-60 overflow-y-auto border border-border rounded-none">
-        {group.totalUsers === 0 ? (
+        {totalUsers === 0 ? (
           <div className="p-4 text-center text-muted-foreground text-sm">No users in this group</div>
         ) : (
-          <ul className="divide-y divide-border">
-            {[] as any[]} // This would be populated with actual users from a separate API call
-          </ul>
+          <div className="p-4 text-center text-muted-foreground text-sm">
+            {totalUsers} user{totalUsers !== 1 ? "s" : ""} in this group. Use email above to add or remove users.
+          </div>
         )}
       </div>
-      <p className="text-sm text-muted-foreground">User list management requires additional API endpoint. Users can be added by email above.</p>
+      <p className="text-sm text-muted-foreground">Users can be managed by email above. Backend requires email for add/remove.</p>
 
       <div className="flex justify-end gap-2 pt-4 border-t border-border">
         <Button variant="outline" onClick={onClose}>Close</Button>

@@ -169,7 +169,7 @@ export function ContentPage() {
         open={showDetailModal}
         onOpenChange={setShowDetailModal}
         content={viewContent}
-        onEdit={(id) => {
+        onEdit={(_id) => {
           setShowDetailModal(false);
           setSelectedContent(viewContent);
           setShowEditModal(true);

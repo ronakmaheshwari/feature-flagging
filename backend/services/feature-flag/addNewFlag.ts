@@ -36,35 +36,37 @@ export const addNewFlagService = async (
     }
 
     const addFlag = await db.$transaction(async (tx: Prisma.TransactionClient) => {
-        const addFlag =await tx.feature_Flag.create({
+        const flag = await tx.feature_Flag.create({
             data: {
                 name: name,
                 is_enabled: is_enabled,
                 environment: environment,
-                rules: JSON.stringify(rules),
+                rules: (typeof rules === "string" ? JSON.parse(rules) : (rules || {})) as Prisma.InputJsonValue,
                 rollout: rollout
             }
         });
         await tx.feature_Flag_Audit.create({
             data: {
-                flagId: addFlag.id,
+                flagId: flag.id,
                 old_value: {},
                 new_value: {
                     userId: userId,
-                    name: addFlag.name,
-                    is_enabled: addFlag.is_enabled,
-                    environment: addFlag.environment,
-                    rules: addFlag.rules,
-                    rollout: addFlag.rollout
+                    name: flag.name,
+                    is_enabled: flag.is_enabled,
+                    environment: flag.environment,
+                    rules: flag.rules,
+                    rollout: flag.rollout
                 },
                 updatedBy: userId as string,
             }
-        })
-    })
+        });
+        return flag;
+    });
 
     return {
         errorCode: 200,
-        success: false,
-        message: `The given flag ${name} is created`
-    }
+        success: true,
+        message: `The given flag ${name} is created`,
+        data: addFlag
+    };
 }

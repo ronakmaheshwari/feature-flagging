@@ -51,9 +51,6 @@ export function DashboardOverview() {
   const enabledFlags = flags.filter((f: any) => f.is_enabled).length;
   const draftContent = content.draft ?? 0;
   const postedContent = content.published ?? 0;
-  const deletedContent = content.deleted ?? 0;
-
-  const platformCounts = content.platformCount || {};
 
   return (
     <div className="space-y-6">

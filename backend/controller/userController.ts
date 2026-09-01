@@ -1,5 +1,5 @@
 import type {Request, Response, NextFunction } from "express";
-import { forgetPasswordOTPVerificationValidation, linkVerificationValidation, otpCodeVerificationValidation, otpVerificationValidation, userLoginValidation, userSignupValidation } from "../validation/userValidation";
+import { forgetPasswordOTPVerificationValidation, linkVerificationValidation, otpCodeVerificationValidation, otpVerificationValidation, searchUserNameValidation, userLoginValidation, userSignupValidation } from "../validation/userValidation";
 import userSignupService from "../services/user/signupService";
 import userLoginService from "../services/user/loginService";
 import userDataService from "../services/user/getUserDataService";
@@ -8,6 +8,7 @@ import userVerificationService from "../services/user/userVerifcationService";
 import forgetPasswordOTPService from "../services/user/forgetPasswordOTPService";
 import forgetPasswordService from "../services/user/forgetPasswordService";
 import logoutUserService from "../services/user/logoutUser";
+import getAllUserData from "../services/user/getAllUserData";
 
 export const userSignupController = async (
     req: Request,
@@ -98,6 +99,57 @@ export const userDetailsController = async (
         }
 
         return res.status(200).json(getUserData)
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Internal error took place"
+        });
+    }
+}
+
+export const getAllUsersController = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const user = req.userId;
+        if(!user) {
+            return res.status(401).json({
+                success: false,
+                message: "You are unauthorized to access these services"
+            })
+        }
+        const role = req.role;
+        if(!role) {
+            return res.status(401).json({
+                success: false,
+                message: "You are unauthorized to access these services"
+            })
+        }
+
+        if(role !== "ADMIN") {
+            return res.status(401).json({
+                success: false,
+                message: "You are unauthorized to access these services"
+            })
+        }
+
+        const parsed = searchUserNameValidation.safeParse(req.query.username);
+        if(!parsed.success) {
+            return res.status(400).json({
+                success: false,
+                message: parsed.error?.flatten()
+            });
+        }
+        const username = parsed.data;
+        const {errorCode, success, message, data} = await getAllUserData(username);
+
+        return res.status(errorCode).json({
+            success: success,
+            message: message,
+            data,
+        })
     } catch (error) {
         return res.status(500).json({
             success: false,
