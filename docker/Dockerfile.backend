@@ -1,0 +1,25 @@
+FROM oven/bun:latest
+WORKDIR /app
+
+COPY backend/package*.json backend/tsconfig*.json backend/prisma.config.ts backend/bun.lock  ./
+COPY backend/prisma ./prisma
+
+RUN bun install --frozen-lockfile
+RUN bun run db:generate
+
+COPY backend/routes ./routes
+COPY backend/services ./services
+COPY backend/utils ./utils
+COPY backend/validation ./validation
+COPY backend/interface ./interface
+COPY backend/index.ts ./index.ts
+
+RUN addgroup --system app && adduser --system --ingroup app user
+
+RUN chown -R user:app/app
+
+USER user
+
+EXPOSE 3000 3000
+
+CMD [ "sh", "-c", "bun run db:migrate && bun run deploy" ]

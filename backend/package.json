@@ -4,9 +4,12 @@
   "type": "module",
   "scripts": {
     "dev": "bun --watch index.ts",
+    "deploy": "bun index.ts",
     "seed": "bunx prisma db seed",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "db:generate": "bunx prisma generate",
+    "db:migrate": "bunx prisma migrate deploy"
   },
   "devDependencies": {
     "@swc/jest": "^0.2.39",
