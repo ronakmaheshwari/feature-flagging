@@ -1,0 +1,67 @@
+services:
+  postgres:
+    image: postgres:latest
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    volumes:
+      - "flagops:/var/lib/postgresql:rw"
+    networks:
+      - flagops
+  redis:
+    image: redis:alpine
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisData:/data:rw
+    networks:
+      - flagops
+  backend:
+    build:
+      context: ./docker
+      dockerfile: Dockerfile.backend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - ./backend/.env
+    environment:
+      - DATABASE_URL=postgresql://postgres:mysecretpassword@postgres:5432/postgres
+    networks:
+      - flagops
+  frontend:
+    build:
+      context: docker
+      dockerfile: Dockerfile.frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    env_file:
+      - ./frontend/.env
+    networks:
+      - flagops
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    depends_on:
+      - backend
+      - frontend
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - flagops
+volumes:
+  flagops:
+  redisData:
+
+networks:
+  flagops:
+    driver: bridge
